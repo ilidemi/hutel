@@ -1,11 +1,6 @@
 The one where the initial commit preparations are described
 ===
 
-So, here's the start of the project. It's always good to get something working first and build on top of that, so the work starts from the backend. And the backend starts with choosing appropriate tech and tooling:
-* Version control system - [Git](https://git-scm.com) looks like an obvious choice for a layman, because it's so widespread and there are well-known platforms for code hosting, like GitHub.
-* Backend tech - [ASP.NET Core](https://www.microsoft.com/net/core) is a solid candidate. .NET ecosystem is very mature, so the lack of documentation or features won't be a probem, and it's cross-platform and familiar for me as well.
-* Code editor - [Visual Studio Code](https://code.visualstudio.com) sounds promising, as it has enough features and is easier to work with than the canonical editors, and at the same time it's less bloated than IDEs. As a bonus, it's cross-platform, despite being a Microsoft product.
-
 Creating a simple .NET Core app is very easy:
 ```
 $ dotnet new
