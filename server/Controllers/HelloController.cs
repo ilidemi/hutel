@@ -8,9 +8,9 @@ namespace hutel.Controllers
     {
         // GET api/hello
         [HttpGet]
-        public IDictionary<string, string> Get()
+        public IActionResult Get()
         {
-            return new Dictionary<string, string> { { "hello", "world" } };
+            return Json(new Dictionary<string, string> { { "hello", "world" } });
         }
     }
 }
