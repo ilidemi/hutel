@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using hutel.Filters;
 using hutel.Logic;
@@ -49,10 +48,10 @@ namespace hutel.Controllers
 
         // GET /api/points
         [HttpGet]
-        public IActionResult GetAll()
+        public IActionResult GetAll(DateTime startDate)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            return Json(points.Values);
+            return Json(points.Values.Where(point => startDate == null || point.Date >= startDate));
         }
 
         // POST /api/points
