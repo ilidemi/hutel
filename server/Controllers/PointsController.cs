@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using hutel.Filters;
+using hutel.Logic;
 using hutel.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -46,7 +47,18 @@ namespace hutel.Controllers
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
-            tags[point.TagId].Validate(point);
+            try
+            {
+                if (!tags.ContainsKey(point.TagId))
+                {
+                    throw new ValidationException($"Unknown tag: {point.TagId}");
+                }
+                PointValidator.Validate(point, tags[point.TagId]);
+            }
+            catch(ValidationException ex)
+            {
+                return new BadRequestObjectResult(ex.ToString());
+            }
             points[id] = point;
             return Json(points);
         }
