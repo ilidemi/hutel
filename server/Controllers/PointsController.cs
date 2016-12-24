@@ -18,6 +18,7 @@ namespace hutel.Controllers
         private const string _tagsKey = "tags";
         private const string _storagePath = ".\\server\\storage.json";
         private const string _storageBackupPath = ".\\server\\storage.json.bak";
+        private const string _tagsPath = ".\\server\\tags.json";
 
         public PointsController(IMemoryCache memoryCache)
         {
@@ -36,7 +37,7 @@ namespace hutel.Controllers
             Dictionary<string, Tag> tags;
             if (!memoryCache.TryGetValue(_tagsKey, out tags))
             {
-                tags = CreateTags();
+                tags = ReadTags();
                 _memoryCache.Set(
                     _tagsKey,
                     tags,
@@ -94,6 +95,10 @@ namespace hutel.Controllers
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
             try
             {
+                if (id != point.Id)
+                {
+                    throw new ValidationException("Ids in url and in point body don't match");
+                }
                 if (!tags.ContainsKey(point.TagId))
                 {
                     throw new ValidationException($"Unknown tag: {point.TagId}");
@@ -107,55 +112,6 @@ namespace hutel.Controllers
             points[id] = point;
             WriteStorage(points);
             return Json(points.Values);
-        }
-
-        private static Dictionary<string, Tag> CreateTags()
-        {
-            return new Dictionary<string, Tag>
-            {
-                {
-                    "testtag",
-                    new Tag
-                    {
-                        Id = "testtag",
-                        Fields = new Dictionary<string, Tag.Field>
-                        {
-                            {
-                                "int",
-                                new Tag.Field
-                                {
-                                    Name = "int",
-                                    Type = Type.GetType("System.Int64")
-                                }
-                            },
-                            {
-                                "dateTime",
-                                new Tag.Field
-                                {
-                                    Name = "dateTime",
-                                    Type = Type.GetType("System.DateTime")
-                                }
-                            },
-                            {
-                                "string",
-                                new Tag.Field
-                                {
-                                    Name = "string",
-                                    Type = Type.GetType("System.String")
-                                }
-                            },
-                            {
-                                "float",
-                                new Tag.Field
-                                {
-                                    Name = "float",
-                                    Type = Type.GetType("System.Double")
-                                }
-                            }
-                        }
-                    }
-                }
-            };
         }
 
         private static Dictionary<Guid, Point> ReadStorage()
@@ -185,6 +141,14 @@ namespace hutel.Controllers
             }
             var pointsJson = JsonConvert.SerializeObject(points.Values, Formatting.Indented);
             System.IO.File.WriteAllText(_storagePath, pointsJson);
+        }
+
+        private static Dictionary<string, Tag> ReadTags()
+        {
+            var tagsString = System.IO.File.ReadAllText(_tagsPath);
+            return JsonConvert
+                .DeserializeObject<List<Tag>>(tagsString)
+                .ToDictionary(tag => tag.Id, tag => tag);
         }
     }
 }

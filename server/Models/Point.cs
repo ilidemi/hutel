@@ -6,6 +6,9 @@ namespace hutel.Models
 {
     public class Point
     {
+        public static readonly IList<string> ReservedFields =
+            new List<string> { "id", "tagId", "date" };
+
         [JsonProperty(Required = Required.Always)]
         public Guid Id { get; set; }
         

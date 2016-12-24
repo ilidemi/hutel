@@ -29,12 +29,9 @@ namespace hutel.Logic
                 {
                     throw new ValidationException($"Property not found: {tagField.Name}");
                 }
-                var pointFieldType = point.Extra[tagField.Name].GetType();
-                if (pointFieldType != tagField.Type)
+                if (!tagField.Type.TypeIsValid(point.Extra[tagField.Name]))
                 {
-                    throw new ValidationException(
-                        $"Type mismatch for property {tagField.Name}: " +
-                        $"expected {tagField.Type}, got {pointFieldType}");
+                    throw new ValidationException($"Type mismatch for property {tagField.Name}");
                 }
             }
         }

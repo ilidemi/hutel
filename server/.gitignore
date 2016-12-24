@@ -269,3 +269,7 @@ __pycache__/
 
 # Points storage
 storage.json
+storage.json.bak
+
+# Tags config
+tags.json
