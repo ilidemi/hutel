@@ -62,10 +62,11 @@ namespace hutel.Models
         
         public class FTime : IFieldType
         {
+            private static readonly DateTime _epoch = new DateTime(1, 1, 1);
             public bool TypeIsValid(object obj)
             {
                 var date = obj as DateTime?;
-                return date.HasValue && date.Value.Date == date.Value;
+                return date.HasValue && date.Value.Date == _epoch;
             }
         }
 
@@ -119,10 +120,19 @@ namespace hutel.Models
             var fieldsList = fieldsJson.Select(fieldJson => DeserializeField((JObject)fieldJson));
             foreach (var field in fieldsList)
             {
-                if (Point.ReservedFields.Any(name => name == field.Name))
+                if (Point.ReservedFields.Any(name => string.Compare(name, field.Name, true) == 0))
                 {
                     throw new JsonReaderException($"Tag {id} contains reserved field {field.Name}");
                 }
+            }
+            var duplicateFields = fieldsList
+                .Select(field => field.Name)
+                .GroupBy(name => name)
+                .Where(g => g.Count() > 1);
+            if (duplicateFields.Any())
+            {
+                throw new InvalidOperationException(
+                    $"Duplicate field names in tag {id}: {string.Join(", ", duplicateFields)}");
             }
             var fields = fieldsList.ToDictionary(field => field.Name, field => field);
             return new Tag

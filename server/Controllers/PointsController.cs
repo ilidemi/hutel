@@ -6,6 +6,7 @@ using hutel.Logic;
 using hutel.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace hutel.Controllers
@@ -13,14 +14,18 @@ namespace hutel.Controllers
     [Route("api/[controller]")]
     public class PointsController : Controller
     {
-        private IMemoryCache _memoryCache;
+        private readonly IMemoryCache _memoryCache;
+        private readonly ILogger _logger;
         private const string _pointsKey = "points";
         private const string _tagsKey = "tags";
-        private const string _storagePath = ".\\server\\storage.json";
-        private const string _storageBackupPath = ".\\server\\storage.json.bak";
-        private const string _tagsPath = ".\\server\\tags.json";
+        private static readonly string _storagePath =
+            System.IO.Path.Combine(".", "server", "storage.json");
+        private static readonly string _storageBackupPath =
+            System.IO.Path.Combine(".", "server", "storage.json.bak");
+        private static readonly string _tagsPath =
+            System.IO.Path.Combine(".", "server", "tags.json");
 
-        public PointsController(IMemoryCache memoryCache)
+        public PointsController(IMemoryCache memoryCache, ILogger<PointsController> logger)
         {
             _memoryCache = memoryCache;
             Dictionary<Guid, Point> points;
@@ -45,6 +50,7 @@ namespace hutel.Controllers
                         .SetPriority(CacheItemPriority.NeverRemove)
                 );
             }
+            _logger = logger;
         }
 
         // GET /api/points
@@ -109,6 +115,10 @@ namespace hutel.Controllers
             {
                 return new BadRequestObjectResult(ex.ToString());
             }
+            if (points.ContainsKey(point.Id))
+            {
+                _logger.LogWarning($"Overwriting the point with id {point.Id}");
+            }
             points[id] = point;
             WriteStorage(points);
             return Json(points.Values);
@@ -145,10 +155,22 @@ namespace hutel.Controllers
 
         private static Dictionary<string, Tag> ReadTags()
         {
+            if (!System.IO.File.Exists(_tagsPath))
+            {
+                throw new System.IO.FileNotFoundException("Tags config doesn't exist");
+            }
             var tagsString = System.IO.File.ReadAllText(_tagsPath);
-            return JsonConvert
-                .DeserializeObject<List<Tag>>(tagsString)
-                .ToDictionary(tag => tag.Id, tag => tag);
+            var tagsList = JsonConvert.DeserializeObject<List<Tag>>(tagsString);
+            var duplicateTags = tagsList
+                .Select(tag => tag.Id)
+                .GroupBy(id => id)
+                .Where(g => g.Count() > 1);
+            if (duplicateTags.Any())
+            {
+                throw new InvalidOperationException(
+                    $"Duplicate tag ids in config: {string.Join(", ", duplicateTags)}");
+            }
+            return tagsList.ToDictionary(tag => tag.Id, tag => tag);
         }
     }
 }
