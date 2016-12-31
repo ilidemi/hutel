@@ -18,12 +18,9 @@ namespace hutel.Controllers
         private readonly ILogger _logger;
         private const string _pointsKey = "points";
         private const string _tagsKey = "tags";
-        private static readonly string _storagePath =
-            System.IO.Path.Combine(".", "server", "storage.json");
-        private static readonly string _storageBackupPath =
-            System.IO.Path.Combine(".", "server", "storage.json.bak");
-        private static readonly string _tagsPath =
-            System.IO.Path.Combine(".", "server", "tags.json");
+        private const string _storagePath = "storage.json";
+        private const string _storageBackupPath = "storage.json.bak";
+        private const string _tagsPath = "tags.json";
 
         public PointsController(IMemoryCache memoryCache, ILogger<PointsController> logger)
         {
@@ -102,7 +99,7 @@ namespace hutel.Controllers
             try
             {
                 if (id != point.Id)
-                {
+                {   
                     throw new ValidationException("Ids in url and in point body don't match");
                 }
                 if (!tags.ContainsKey(point.TagId))
