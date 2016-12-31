@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using hutel.Logic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -21,70 +22,6 @@ namespace hutel.Models
             public IFieldType Type { get; set; }
 
         }
-
-        public interface IFieldType
-        {
-            bool TypeIsValid(object obj);
-        }
-
-        public class FInt : IFieldType
-        {
-            public bool TypeIsValid(object obj)
-            {
-                return obj is Int64;
-            }
-        }
-
-        public class FFloat : IFieldType
-        {
-            public bool TypeIsValid(object obj)
-            {
-                return obj is Double;
-            }
-        }
-
-        public class FString : IFieldType
-        {
-            public bool TypeIsValid(object obj)
-            {
-                return obj is string;
-            }
-        }
-
-        public class FDate : IFieldType
-        {
-            public bool TypeIsValid(object obj)
-            {
-                var date = obj as DateTime?;
-                return date.HasValue && date.Value.TimeOfDay.TotalMilliseconds == 0;
-            }
-        }
-        
-        public class FTime : IFieldType
-        {
-            private static readonly DateTime _epoch = new DateTime(1, 1, 1);
-            public bool TypeIsValid(object obj)
-            {
-                var date = obj as DateTime?;
-                return date.HasValue && date.Value.Date == _epoch;
-            }
-        }
-
-        public class FEnum : IFieldType
-        {
-            private readonly IList<string> _values;
-
-            public FEnum(IList<string> values)
-            {
-                _values = values;
-            }
-
-            public bool TypeIsValid(object obj)
-            {
-                var str = obj as string;
-                return str != null && _values.Contains(str);
-            }
-        }
     }
 
     public class TagJsonConverter : JsonConverter
@@ -92,11 +29,11 @@ namespace hutel.Models
         private readonly Dictionary<string, Type> _stringToSimpleFieldType =
             new Dictionary<string, Type>
             {
-                { "int", typeof(Tag.FInt) },
-                { "float", typeof(Tag.FFloat) },
-                { "string", typeof(Tag.FString) },
-                { "date", typeof(Tag.FDate) },
-                { "time", typeof(Tag.FTime) }
+                { "int", typeof(IntFieldType) },
+                { "float", typeof(FloatFieldType) },
+                { "string", typeof(StringFieldType) },
+                { "date", typeof(DateFieldType) },
+                { "time", typeof(TimeFieldType) }
             };
 
         public override bool CanRead
@@ -109,8 +46,8 @@ namespace hutel.Models
             get { return false; }
         }
 
-        public override object ReadJson(
-            JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override Object ReadJson(
+            JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
         {
             var jObject = JObject.Load(reader);
             var id = jObject
@@ -142,7 +79,7 @@ namespace hutel.Models
             };
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }
@@ -166,7 +103,7 @@ namespace hutel.Models
                 {
                     throw new JsonReaderException($"Unknown type {rawString} in tag field {name}");
                 }
-                var typeInstance = (Tag.IFieldType)Activator.CreateInstance(type);
+                var typeInstance = (IFieldType)Activator.CreateInstance(type);
                 return new Tag.Field
                 {
                     Name = name,
@@ -183,7 +120,7 @@ namespace hutel.Models
                 return new Tag.Field
                 {
                     Name = name,
-                    Type = new Tag.FEnum(values)
+                    Type = new EnumFieldType(values)
                 };
             }
             else

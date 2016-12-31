@@ -25,17 +25,6 @@ namespace hutel.Controllers
         public PointsController(IMemoryCache memoryCache, ILogger<PointsController> logger)
         {
             _memoryCache = memoryCache;
-            Dictionary<Guid, Point> points;
-            if (!_memoryCache.TryGetValue(_pointsKey, out points))
-            {
-                points = ReadStorage();
-                _memoryCache.Set(
-                    _pointsKey,
-                    points,
-                    new MemoryCacheEntryOptions()
-                        .SetPriority(CacheItemPriority.NeverRemove)
-                );
-            }
             Dictionary<string, Tag> tags;
             if (!memoryCache.TryGetValue(_tagsKey, out tags))
             {
@@ -47,68 +36,72 @@ namespace hutel.Controllers
                         .SetPriority(CacheItemPriority.NeverRemove)
                 );
             }
+            Dictionary<Guid, Point> points;
+            if (!_memoryCache.TryGetValue(_pointsKey, out points))
+            {
+                points = ReadStorage(tags);
+                _memoryCache.Set(
+                    _pointsKey,
+                    points,
+                    new MemoryCacheEntryOptions()
+                        .SetPriority(CacheItemPriority.NeverRemove)
+                );
+            }
             _logger = logger;
         }
 
         // GET /api/points
         [HttpGet]
-        public IActionResult GetAll(DateTime startDate)
-        {
-            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            return Json(points.Values.Where(point => startDate == null || point.Date >= startDate));
-        }
-
-        // POST /api/points
-        [HttpPost]
-        [ValidateModelState]
-        public IActionResult PostAll([FromBody]List<Point> replacementPoints)
+        public IActionResult GetAll(string startDate)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            return Json(
+                points.Values
+                    .Where(point => startDate == null || point.Date >= new HutelDate(startDate))
+                    .Select(p => p.ToJson(tags))
+                    .ToList());
+        }
+
+        // PUT /api/points
+        [HttpPut]
+        [ValidateModelState]
+        public IActionResult PutAll([FromBody]PointsStorageJson replacementPoints)
+        {
+            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
+            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            IEnumerable<Point> pointsList;
             try
             {
-                foreach (var point in replacementPoints)
-                {
-                    if (!tags.ContainsKey(point.TagId))
-                    {
-                        throw new ValidationException($"Unknown tag: {point.TagId}");
-                    }
-                    PointValidator.Validate(point, tags[point.TagId]);
-                }
+                pointsList = replacementPoints.Select(p => Point.FromJson(p, tags));
             }
-            catch(ValidationException ex)
+            catch(PointValidationException ex)
             {
                 return new BadRequestObjectResult(ex.ToString());
             }
             points.Clear();
-            foreach (var p in replacementPoints)
+            foreach (var p in pointsList)
             {
                 points.Add(p.Id, p);
             }
-            WriteStorage(points);
-            return Json(points.Values);
+            WriteStorage(points, tags);
+            return Json(points.Values.Select(p => p.ToJson(tags)).ToList());
         }
 
-        // POST api/points/id
-        [HttpPost("{id}")]
+        // POST api/points
+        [HttpPost]
         [ValidateModelState]
-        public IActionResult PostOne(Guid id, [FromBody]Point point)
+        public IActionResult PostOne([FromBody]PointJson pointJson)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var id = Guid.NewGuid();
+            Point point;
             try
             {
-                if (id != point.Id)
-                {   
-                    throw new ValidationException("Ids in url and in point body don't match");
-                }
-                if (!tags.ContainsKey(point.TagId))
-                {
-                    throw new ValidationException($"Unknown tag: {point.TagId}");
-                }
-                PointValidator.Validate(point, tags[point.TagId]);
+                point = Point.FromJson(pointJson, id, tags);
             }
-            catch(ValidationException ex)
+            catch(PointValidationException ex)
             {
                 return new BadRequestObjectResult(ex.ToString());
             }
@@ -117,18 +110,20 @@ namespace hutel.Controllers
                 _logger.LogWarning($"Overwriting the point with id {point.Id}");
             }
             points[id] = point;
-            WriteStorage(points);
-            return Json(points.Values);
+            WriteStorage(points, tags);
+            return Json(points.Values.Select(p => p.ToJson(tags)).ToList());
         }
 
-        private static Dictionary<Guid, Point> ReadStorage()
+        private static Dictionary<Guid, Point> ReadStorage(Dictionary<string, Tag> tags)
         {
             if (System.IO.File.Exists(_storagePath))
             {
                 var pointsString = System.IO.File.ReadAllText(_storagePath);
                 return JsonConvert
-                    .DeserializeObject<List<Point>>(pointsString)
-                    .ToDictionary(point => point.Id, point => point);
+                    .DeserializeObject<PointsStorageJson>(pointsString)
+                    .ToDictionary(
+                        pointWithIdJson => pointWithIdJson.Id,
+                        pointWithIdJson => Point.FromJson(pointWithIdJson, tags));
             }
             else
             {
@@ -136,7 +131,9 @@ namespace hutel.Controllers
             }
         }
 
-        private static void WriteStorage(Dictionary<Guid, Point> points)
+        private static void WriteStorage(
+            Dictionary<Guid, Point> points,
+            Dictionary<string, Tag> tags)
         {
             if (System.IO.File.Exists(_storageBackupPath))
             {
@@ -146,7 +143,9 @@ namespace hutel.Controllers
             {
                 System.IO.File.Copy(_storagePath, _storageBackupPath);
             }
-            var pointsJson = JsonConvert.SerializeObject(points.Values, Formatting.Indented);
+            var pointsJson = JsonConvert.SerializeObject(
+                points.Values.Select(p => p.ToJson(tags)).ToList(),
+                Formatting.Indented);
             System.IO.File.WriteAllText(_storagePath, pointsJson);
         }
 
