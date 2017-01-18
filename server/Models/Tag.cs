@@ -50,10 +50,25 @@ namespace hutel.Models
             JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
         {
             var jObject = JObject.Load(reader);
-            var id = jObject
-                .GetValue("id", StringComparison.OrdinalIgnoreCase)
-                .Value<string>();
+            var knownFields = new[] { "id", "fields" };
+            foreach (var property in jObject.Properties())
+            {
+                if (!knownFields.Contains(property.Name))
+                {
+                    throw new JsonReaderException($"Unknown tag property: {property.Name}");
+                }
+            }
+            var idToken = jObject.GetValue("id", StringComparison.OrdinalIgnoreCase);
+            if (idToken == null)
+            {
+                throw new JsonReaderException("Tag doesn't have 'id' property");
+            }
+            var id = idToken.Value<string>();
             var fieldsJson = (JArray)jObject.GetValue("fields", StringComparison.OrdinalIgnoreCase);
+            if (fieldsJson == null || !fieldsJson.Any())
+            {
+                throw new JsonReaderException("Tag doesn't contain any fields");
+            }
             var fieldsList = fieldsJson.Select(fieldJson => DeserializeField((JObject)fieldJson));
             foreach (var field in fieldsList)
             {
@@ -68,7 +83,7 @@ namespace hutel.Models
                 .Where(g => g.Count() > 1);
             if (duplicateFields.Any())
             {
-                throw new InvalidOperationException(
+                throw new JsonReaderException(
                     $"Duplicate field names in tag {id}: {string.Join(", ", duplicateFields)}");
             }
             var fields = fieldsList.ToDictionary(field => field.Name, field => field);
@@ -91,10 +106,25 @@ namespace hutel.Models
 
         private Tag.Field DeserializeField(JObject jObject)
         {
-            var name = jObject
-                .GetValue("name", StringComparison.OrdinalIgnoreCase)
-                .Value<string>();
+            var knownFields = new[] { "name", "type" };
+            foreach (var property in jObject.Properties())
+            {
+                if (!knownFields.Contains(property.Name))
+                {
+                    throw new JsonReaderException($"Unknown field property: {property.Name}");
+                }
+            }
+            var nameToken = jObject.GetValue("name", StringComparison.OrdinalIgnoreCase);
+            if (nameToken == null)
+            {
+                throw new JsonReaderException("Field doesn't have 'name' property");
+            }
+            var name = nameToken.Value<string>();
             var rawType = jObject.GetValue("type", StringComparison.OrdinalIgnoreCase);
+            if (rawType == null)
+            {
+                throw new JsonReaderException("Field doesn't have 'type' property");
+            }
             if (rawType.Type == JTokenType.String)
             {
                 var rawString = rawType.Value<string>();

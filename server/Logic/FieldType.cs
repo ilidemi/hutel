@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace hutel.Logic
@@ -21,6 +22,7 @@ namespace hutel.Logic
 
         public Object ToJson(Object obj)
         {
+            TypeValidationHelper.Validate(obj, typeof(Int64));
             return obj;
         }
     }
@@ -35,6 +37,7 @@ namespace hutel.Logic
 
         public Object ToJson(Object obj)
         {
+            TypeValidationHelper.Validate(obj, typeof(Double));
             return obj;
         }
     }
@@ -49,6 +52,7 @@ namespace hutel.Logic
 
         public Object ToJson(Object obj)
         {
+            TypeValidationHelper.Validate(obj, typeof(string));
             return obj;
         }
     }
@@ -58,11 +62,19 @@ namespace hutel.Logic
         public Object FromJson(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(string));
-            return new HutelDate((string)obj);
+            try
+            {
+                return new HutelDate((string)obj);
+            }
+            catch(Exception ex)
+            {
+                throw new TypeValidationException("Error in date constructor", ex);
+            }
         }
 
         public Object ToJson(Object obj)
         {
+            TypeValidationHelper.Validate(obj, typeof(HutelDate));
             return ((HutelDate)obj).ToString();
         }
     }
@@ -72,38 +84,65 @@ namespace hutel.Logic
         public Object FromJson(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(string));
-            return new HutelTime((string)obj);
+            try
+            {
+                return new HutelTime((string)obj);
+            }
+            catch(Exception ex)
+            {
+                throw new TypeValidationException("Error in time constructor", ex);
+            }
         }
 
         public Object ToJson(Object obj)
         {
+            TypeValidationHelper.Validate(obj, typeof(HutelTime));
             return ((HutelTime)obj).ToString();
         }
     }
 
     public class EnumFieldType : IFieldType
     {
-        private readonly IList<string> _values;
-
-        public EnumFieldType(IList<string> values)
+        public ICollection<string> Values
         {
+            get
+            {
+                return _values;
+            }
+        }
+
+        private readonly ICollection<string> _values;
+
+        public EnumFieldType(ICollection<string> values)
+        {
+            if (!values.Any())
+            {
+                throw new ArgumentOutOfRangeException("Empty enum is useless");
+            }
             _values = values;
         }
 
         public Object FromJson(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(string));
+            throwIfNotInCollection(obj);
+            return obj;
+        }
+
+        public Object ToJson(Object obj)
+        {
+            TypeValidationHelper.Validate(obj, typeof(string));
+            throwIfNotInCollection(obj);
+            return obj;
+        }
+
+        private void throwIfNotInCollection(object obj)
+        {
             var str = (string)obj;
             if (!_values.Contains(str))
             {
                 throw new TypeValidationException($"Invalid enum value: {str}");
             }
-            return str;
-        }
-
-        public Object ToJson(Object obj)
-        {
-            return obj;
         }
     }
     

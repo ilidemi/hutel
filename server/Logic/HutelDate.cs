@@ -5,7 +5,7 @@ namespace hutel.Logic
 {
     public class HutelDate
     {
-        private DateTime DateTime { get; }
+        public DateTime DateTime { get; }
 
         private const string _format = "yyyy-MM-dd";
 
