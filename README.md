@@ -8,18 +8,50 @@ $ dotnet run
 ```
 in the /server folder.
 
-To add a new point to in memory storage, issue a HTTP request:
+To run the tests, execute
 ```
-POST http://localhost:5000/api/points/7fdbd84a-2405-4c6c-8b12-e72c582e4b37
-content-type:application/json
+$ dotnet test
+```
+in the /server.test folder.
 
+
+## Usage
+The server acts as a storage for data points, which are validated against the corresponding tags from the `tags.json` file. Each point must contain a tag id, date and all of the fields required by its tag. There are six field types supported: int, float, string, date, time, enum.
+
+Examples of the points (rename `tags.json.example` to `tags.json` for successful validation):
+```
 {
-    'id': '7fdbd84a-2405-4c6c-8b12-e72c582e4b37',
-    'tagId': 'testtag',
-    'date': '2016-12-19T21:07:31Z',
-    'int': 1337,
-    'dateTime': '2016-12-20T21:07:31Z',
-    'string': 'abacaba',
-    'float': 1337.0
+    'tagId': 'pushups',
+    'date': '2016-12-11',
+    'sets': 5,
+    'total': 130
 }
 ```
+```
+{
+    'tagId': 'enoughsleep',
+    'date': '2016-12-12',
+    'value': 'no'
+}
+```
+```
+{
+    'tagId': 'vacation',
+    'date': '2016-12-17',
+    'location': 'Mars',
+    'endDate': '2016-12-31'
+}
+```
+```
+{
+    'tagId': 'run',
+    'date': '2017-01-01',
+    'km': 42.0,
+    'time': '02:34:11'
+}
+```
+
+## Methods
+* POST `/api/points` with point in the body adds a new point to the storage, validating it against corresponding tag
+* GET `/api/points` returns the entire storage contents
+* PUT `/api/points` overwrites the entire storage, the body format is the same as result of the previous method; all points are validated against tags, if any single one doesn't pass validation, storage is not modified
