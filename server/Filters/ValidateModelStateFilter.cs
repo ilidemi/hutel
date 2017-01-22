@@ -9,7 +9,7 @@ namespace hutel.Filters
         {
             if (actionContext.ModelState.IsValid == false)
             {
-                actionContext.Result = new BadRequestResult();
+                actionContext.Result = new BadRequestObjectResult("Request body is malformed");
             }
         }
     }
