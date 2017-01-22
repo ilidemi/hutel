@@ -111,7 +111,7 @@ namespace hutel.Controllers
             }
             points[id] = point;
             WriteStorage(points, tags);
-            return Json(points.Values.Select(p => p.ToJson(tags)).ToList());
+            return Json(point.ToJson(tags));
         }
 
         private static Dictionary<Guid, Point> ReadStorage(Dictionary<string, Tag> tags)
