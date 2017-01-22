@@ -71,14 +71,21 @@ namespace hutel.Logic
                 }
                 pointExtra.Add(tagField.Name, tagField.Type.FromJson(extra[tagField.Name]));
             }
-            var pointDate = new HutelDate(date);
-            return new Point
+            try
             {
-                Id = id,
-                TagId = tagId,
-                Date = pointDate,
-                Extra = pointExtra
-            };
+                var pointDate = new HutelDate(date);
+                return new Point
+                {
+                    Id = id,
+                    TagId = tagId,
+                    Date = pointDate,
+                    Extra = pointExtra
+                };
+            }
+            catch (FormatException ex)
+            {
+                throw new PointValidationException($"Malformed date: {date}", ex);
+            }
         }
     }
     public class PointValidationException: Exception
