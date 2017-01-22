@@ -11,8 +11,7 @@ using Newtonsoft.Json;
 
 namespace hutel.Controllers
 {
-    [Route("api/[controller]")]
-    public class PointsController : Controller
+    public class ApiController : Controller
     {
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger _logger;
@@ -22,7 +21,7 @@ namespace hutel.Controllers
         private const string _storageBackupPath = "storage.json.bak";
         private const string _tagsPath = "tags.json";
 
-        public PointsController(IMemoryCache memoryCache, ILogger<PointsController> logger)
+        public ApiController(IMemoryCache memoryCache, ILogger<ApiController> logger)
         {
             _memoryCache = memoryCache;
             Dictionary<string, Tag> tags;
@@ -50,8 +49,7 @@ namespace hutel.Controllers
             _logger = logger;
         }
 
-        // GET /api/points
-        [HttpGet]
+        [HttpGet("/api/points")]
         public IActionResult GetAll(string startDate)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
@@ -63,8 +61,7 @@ namespace hutel.Controllers
                     .ToList());
         }
 
-        // PUT /api/points
-        [HttpPut]
+        [HttpPut("/api/points")]
         [ValidateModelState]
         public IActionResult PutAll([FromBody]PointsStorageJson replacementPoints)
         {
@@ -88,8 +85,7 @@ namespace hutel.Controllers
             return Json(points.Values.Select(p => p.ToJson(tags)).ToList());
         }
 
-        // POST api/points
-        [HttpPost]
+        [HttpPost("/api/points")]
         [ValidateModelState]
         public IActionResult PostOne([FromBody]PointJson pointJson)
         {
@@ -105,9 +101,35 @@ namespace hutel.Controllers
             {
                 return new BadRequestObjectResult(ex.ToString());
             }
-            if (points.ContainsKey(point.Id))
+            points[id] = point;
+            WriteStorage(points, tags);
+            return Json(point.ToJson(tags));
+        }
+
+        [HttpPut("/api/point/{id}")]
+        [ValidateModelState]
+        public IActionResult PutOne(Guid id, [FromBody]PointJson pointJson)
+        {
+            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
+            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            if (!points.ContainsKey(id))
             {
-                _logger.LogWarning($"Overwriting the point with id {point.Id}");
+                return new BadRequestObjectResult(
+                    new ArgumentOutOfRangeException($"No point with id {id}").ToString());
+            }
+            Point point;
+            try
+            {
+                point = Point.FromJson(pointJson, id, tags);
+            }
+            catch(PointValidationException ex)
+            {
+                return new BadRequestObjectResult(ex.ToString());
+            }
+            if (string.Compare(point.TagId, points[id].TagId, true) != 0) {
+                return new BadRequestObjectResult(
+                    new ArgumentOutOfRangeException(
+                        $"Tag id differs from the known one. Expected: {points[id].TagId}, got: {point.TagId}").ToString());
             }
             points[id] = point;
             WriteStorage(points, tags);
