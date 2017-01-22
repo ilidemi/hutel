@@ -82,8 +82,9 @@ namespace hutel.Controllers
                 .Where(g => g.Count() > 1);
             if (duplicatePoints.Any())
             {
-                throw new InvalidOperationException(
-                    $"Duplicate point ids: {string.Join(", ", duplicatePoints)}");
+                return new BadRequestObjectResult(
+                    new InvalidOperationException(
+                        $"Duplicate point ids: {string.Join(", ", duplicatePoints)}").ToString());
             }
             points.Clear();
             foreach (var p in pointsList)
