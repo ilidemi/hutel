@@ -69,7 +69,14 @@ namespace hutel.Logic
                 {
                     throw new PointValidationException($"Property not found: {tagField.Name}");
                 }
-                pointExtra.Add(tagField.Name, tagField.Type.FromJson(extra[tagField.Name]));
+                try
+                {
+                    pointExtra.Add(tagField.Name, tagField.Type.FromJson(extra[tagField.Name]));
+                }
+                catch(TypeValidationException ex)
+                {
+                    throw new PointValidationException($"Malformed property: {extra[tagField.Name]}", ex);
+                }
             }
             try
             {
