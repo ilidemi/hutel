@@ -1,0 +1,53 @@
+[
+    {
+        "id": "pushups",
+        "fields": [
+            {
+                "name": "sets",
+                "type": "int"
+            },
+            {
+                "name": "total",
+                "type": "int"
+            }
+        ]
+    },
+    {
+        "id": "enoughsleep",
+        "fields": [
+            {
+                "name": "value",
+                "type": [
+                    "yes",
+                    "no"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "vacation",
+        "fields": [
+            {
+                "name": "location",
+                "type": "string"
+            },
+            {
+                "name": "enddate",
+                "type": "date"
+            }
+        ]
+    },
+    {
+        "id": "run",
+        "fields": [
+            {
+                "name": "km",
+                "type": "float"
+            },
+            {
+                "name": "time",
+                "type": "time"
+            }
+        ]
+    }
+]
