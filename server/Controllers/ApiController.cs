@@ -76,6 +76,15 @@ namespace hutel.Controllers
             {
                 return new BadRequestObjectResult(ex.ToString());
             }
+            var duplicatePoints = pointsList
+                .Select(point => point.Id)
+                .GroupBy(id => id)
+                .Where(g => g.Count() > 1);
+            if (duplicatePoints.Any())
+            {
+                throw new InvalidOperationException(
+                    $"Duplicate point ids: {string.Join(", ", duplicatePoints)}");
+            }
             points.Clear();
             foreach (var p in pointsList)
             {
@@ -141,11 +150,19 @@ namespace hutel.Controllers
             if (System.IO.File.Exists(_storagePath))
             {
                 var pointsString = System.IO.File.ReadAllText(_storagePath);
-                return JsonConvert
-                    .DeserializeObject<PointsStorageJson>(pointsString)
-                    .ToDictionary(
-                        pointWithIdJson => pointWithIdJson.Id,
-                        pointWithIdJson => Point.FromJson(pointWithIdJson, tags));
+                var pointsList = JsonConvert.DeserializeObject<PointsStorageJson>(pointsString);
+                var duplicatePoints = pointsList
+                    .Select(point => point.Id)
+                    .GroupBy(id => id)
+                    .Where(g => g.Count() > 1);
+                if (duplicatePoints.Any())
+                {
+                    throw new InvalidOperationException(
+                        $"Duplicate point ids in config: {string.Join(", ", duplicatePoints)}");
+                }
+                return pointsList.ToDictionary(
+                    pointWithIdJson => pointWithIdJson.Id,
+                    pointWithIdJson => Point.FromJson(pointWithIdJson, tags));
             }
             else
             {
