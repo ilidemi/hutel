@@ -91,6 +91,7 @@ namespace hutel.Tests
             Assert.Throws<PointValidationException>(() => Point.FromJson(pointJson, AllTags));
         }
 
+        [Fact]
         public void FromJsonUnknownProperty()
         {
             var pointJson = new PointWithIdJson
@@ -106,6 +107,7 @@ namespace hutel.Tests
             Assert.Throws<PointValidationException>(() => Point.FromJson(pointJson, AllTags));
         }
 
+        [Fact]
         public void FromJsonMissingProperty()
         {
             var pointJson = new PointWithIdJson
