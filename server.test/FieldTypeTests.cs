@@ -78,11 +78,14 @@ namespace hutel.Tests
                     new Object[] { typeof(StringFieldType), 0 },
                     new Object[] { typeof(DateFieldType), "01/02/2000" },
                     new Object[] { typeof(DateFieldType), "01012000" },
+                    new Object[] { typeof(DateFieldType), "2017-09-31" },
                     new Object[] { typeof(DateFieldType), "" },
                     new Object[] { typeof(DateFieldType), 0 },
                     new Object[] { typeof(TimeFieldType), "9:1:2" },
                     new Object[] { typeof(TimeFieldType), "1.10:11:12" },
-                    new Object[] { typeof(TimeFieldType), "30:11:12" }
+                    new Object[] { typeof(TimeFieldType), "30:11:12" },
+                    new Object[] { typeof(TimeFieldType), "24:00:00" },
+                    new Object[] { typeof(TimeFieldType), "00:60:00" }
                 };
             }
         }
