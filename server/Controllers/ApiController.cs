@@ -20,6 +20,7 @@ namespace hutel.Controllers
         private const string _storagePath = "storage.json";
         private const string _storageBackupPath = "storage.json.bak";
         private const string _tagsPath = "tags.json";
+        private const string _tagsBackupPath = "tags.json.bak";
 
         public ApiController(IMemoryCache memoryCache, ILogger<ApiController> logger)
         {
@@ -50,7 +51,7 @@ namespace hutel.Controllers
         }
 
         [HttpGet("/api/points")]
-        public IActionResult GetAll(string startDate)
+        public IActionResult GetAllPoints(string startDate)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
@@ -63,7 +64,7 @@ namespace hutel.Controllers
 
         [HttpPut("/api/points")]
         [ValidateModelState]
-        public IActionResult PutAll([FromBody]PointsStorageJson replacementPoints)
+        public IActionResult PutAllPoints([FromBody]PointsStorageJson replacementPoints)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
@@ -97,7 +98,7 @@ namespace hutel.Controllers
 
         [HttpPost("/api/points")]
         [ValidateModelState]
-        public IActionResult PostOne([FromBody]PointJson pointJson)
+        public IActionResult PostPoint([FromBody]PointJson pointJson)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
@@ -118,7 +119,7 @@ namespace hutel.Controllers
 
         [HttpPut("/api/point/{id}")]
         [ValidateModelState]
-        public IActionResult PutOne(Guid id, [FromBody]PointJson pointJson)
+        public IActionResult PutPoint(Guid id, [FromBody]PointJson pointJson)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
@@ -144,6 +145,48 @@ namespace hutel.Controllers
             points[id] = point;
             WriteStorage(points, tags);
             return Json(point.ToJson(tags));
+        }
+
+        [HttpGet("/api/tags")]
+        public IActionResult GetAllTags()
+        {
+            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            return Json(tags.Values);
+        }
+
+        [HttpPut("/api/tags")]
+        [ValidateModelState]
+        public IActionResult PutAllTags([FromBody]List<Tag> replacementTagsList)
+        {
+            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
+            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var duplicateTags = replacementTagsList
+                .Select(tag => tag.Id)
+                .GroupBy(id => id)
+                .Where(g => g.Count() > 1);
+            if (duplicateTags.Any())
+            {
+                return new BadRequestObjectResult(
+                    new InvalidOperationException(
+                        $"Duplicate tag ids: {string.Join(", ", duplicateTags)}").ToString());
+            }
+            var pointsJson = points.Values.Select(point => point.ToJson(tags));
+            var replacementTags = replacementTagsList.ToDictionary(tag => tag.Id, tag => tag);
+            try
+            {
+                pointsJson.Select(p => Point.FromJson(p, replacementTags));
+            }
+            catch(PointValidationException ex)
+            {
+                return new BadRequestObjectResult(ex.ToString());
+            }
+            tags.Clear();
+            foreach (var tag in replacementTagsList)
+            {
+                tags.Add(tag.Id, tag);
+            }
+            WriteTags(tags);
+            return Json(tags.Values);
         }
 
         private static Dictionary<Guid, Point> ReadStorage(Dictionary<string, Tag> tags)
@@ -207,6 +250,20 @@ namespace hutel.Controllers
                     $"Duplicate tag ids in config: {string.Join(", ", duplicateTags)}");
             }
             return tagsList.ToDictionary(tag => tag.Id, tag => tag);
+        }
+
+        private static void WriteTags(Dictionary<string, Tag> tags)
+        {
+            if (System.IO.File.Exists(_tagsBackupPath))
+            {
+                System.IO.File.Delete(_tagsBackupPath);
+            }
+            if (System.IO.File.Exists(_tagsPath))
+            {
+                System.IO.File.Copy(_tagsPath, _tagsBackupPath);
+            }
+            var tagsJson = JsonConvert.SerializeObject(tags.Values, Formatting.Indented);
+            System.IO.File.WriteAllText(_tagsPath, tagsJson);
         }
     }
 }

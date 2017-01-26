@@ -35,6 +35,15 @@ namespace hutel.Models
                 { "date", typeof(DateFieldType) },
                 { "time", typeof(TimeFieldType) }
             };
+        private readonly Dictionary<Type, string> _simpleFieldTypeToString = 
+            new Dictionary<Type, string>
+            {
+                { typeof(IntFieldType), "int" },
+                { typeof(FloatFieldType), "float" },
+                { typeof(StringFieldType), "string" },
+                { typeof(DateFieldType), "date" },
+                { typeof(TimeFieldType), "time" }
+            };
 
         public override bool CanRead
         {
@@ -43,7 +52,7 @@ namespace hutel.Models
 
         public override bool CanWrite
         {
-            get { return false; }
+            get { return true; }
         }
 
         public override Object ReadJson(
@@ -96,7 +105,24 @@ namespace hutel.Models
 
         public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            var tag = (Tag) value;
+            var jObject = new JObject();
+            jObject["id"] = tag.Id;
+            jObject["fields"] = new JArray(tag.Fields.Values.Select(field =>
+                {
+                    var fieldJson = new JObject();
+                    fieldJson.Add("name", field.Name);
+                    if (_simpleFieldTypeToString.Keys.Contains(field.Type.GetType()))
+                    {
+                        fieldJson.Add("type", _simpleFieldTypeToString[field.Type.GetType()]);
+                    }
+                    else
+                    {
+                        fieldJson.Add("type", new JArray(((EnumFieldType)field.Type).Values));
+                    }
+                    return fieldJson;
+                }));
+            jObject.WriteTo(writer);
         }
 
         public override bool CanConvert(Type objectType)
