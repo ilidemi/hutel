@@ -1,0 +1,36 @@
+@{
+    Layout = null;
+}
+<html>
+    <head>
+    </head>
+    <body>
+        <div id="app">
+            <div v-if="selectedTag === null" display="inline">
+                <div v-for="tag in tags">
+                    <button v-on:click="selectTag(tag)">{{ tag.id }}</button>
+                </div>
+            </div>
+            <div v-if="selectedTag !== null">
+                <button v-on:click="resetTag">⬅ Back</button>
+                <div>{{ selectedTag.id }}</div>
+                <div v-for="field in selectedTag.fields" display="inline">
+                    <div>{{ field.name }}:</div>
+                    <input v-model="tagInput[field.name]">
+                </div>
+                <div display="inline">
+                    <div>date:</div>
+                    <input v-model="tagInput['date']">
+                    <button v-on:click="todayDate">Today</button>
+                    <button v-on:click="yesterdayDate">Yesterday</button>
+                </div>
+                <button v-on:click="submit">Submit</button>
+            </div>
+            {{ message }}
+        </div>
+        <script src="https://unpkg.com/vue/dist/vue.js"></script>
+        <script src="https://unpkg.com/vue-resource@1.1.0/dist/vue-resource.js"></script>
+        <script src="https://unpkg.com/moment@2.14.1/moment.js"></script>
+        <script src="js/Index.js"></script>
+    </body>
+</html>

@@ -1,9 +1,10 @@
+using System.IO;
 using hutel.Filters;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -34,8 +35,14 @@ namespace server
             {
                 app.UseDeveloperExceptionPage();
             }
-            
             app.UseMvc();
+            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions()
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(Directory.GetCurrentDirectory(), "ViewModels")),
+                RequestPath = new PathString("/js")
+            });
         }
     }
 }
