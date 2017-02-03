@@ -73,6 +73,10 @@ namespace hutel.Models
                 throw new JsonReaderException("Tag doesn't have 'id' property");
             }
             var id = idToken.Value<string>();
+            if (id == string.Empty)
+            {
+                throw new JsonReaderException("Tag id is empty");
+            }
             var fieldsJson = (JArray)jObject.GetValue("fields", StringComparison.OrdinalIgnoreCase);
             if (fieldsJson == null || !fieldsJson.Any())
             {
@@ -146,6 +150,10 @@ namespace hutel.Models
                 throw new JsonReaderException("Field doesn't have 'name' property");
             }
             var name = nameToken.Value<string>();
+            if (name == string.Empty)
+            {
+                throw new JsonReaderException("Field name is empty");
+            }
             var rawType = jObject.GetValue("type", StringComparison.OrdinalIgnoreCase);
             if (rawType == null)
             {
