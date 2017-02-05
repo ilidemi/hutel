@@ -20,9 +20,9 @@
                 </div>
                 <div display="inline">
                     <div>date:</div>
-                    <input v-model="tagInput['date']">
-                    <button v-on:click="todayDate">Today</button>
-                    <button v-on:click="yesterdayDate">Yesterday</button>
+                    <input v-model="tagInput.date">
+                    <button v-on:click="incrementDate">+</button>
+                    <button v-on:click="decrementDate">-</button>
                 </div>
                 <button v-on:click="submit">Submit</button>
             </div>
