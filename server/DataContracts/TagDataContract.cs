@@ -3,16 +3,16 @@ using Newtonsoft.Json;
 
 namespace hutel.Models
 {
-    public class TagJson
+    public class TagDataContract
     {
         [JsonProperty(Required = Required.Always)]
         public string Id { get; set; }
 
         [JsonProperty(Required = Required.Always)]
-        public List<TagFieldJson> Fields { get; set; }
+        public List<TagFieldDataContract> Fields { get; set; }
     }
 
-    public class TagFieldJson
+    public class TagFieldDataContract
     {
         [JsonProperty(Required = Required.Always)]
         public string Name { get; set; }

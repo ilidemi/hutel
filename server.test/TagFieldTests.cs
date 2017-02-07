@@ -13,7 +13,8 @@ namespace hutel.Tests
         [Fact]
         public void EmptyEnum()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new EnumTagField(new TagFieldJson
+            Assert.Throws<ArgumentOutOfRangeException>(() => new EnumTagField(
+                new TagFieldDataContract
                 {
                     Name = EnumFieldName,
                     Type = TagFieldConstants.Enum,
@@ -22,45 +23,45 @@ namespace hutel.Tests
         }
 
         [Fact]
-        public void ValidIntJson()
+        public void ValidIntDataContract()
         {
             var intField = CreateIntField();
             var input = (Int64)0;
-            Assert.Equal(intField.ValueFromJson(input), input);
-            Assert.Equal(intField.ValueToJson(input), input);
+            Assert.Equal(intField.ValueFromDataContract(input), input);
+            Assert.Equal(intField.ValueToDataContract(input), input);
         }
 
         [Fact]
-        public void ValidFloatJson()
+        public void ValidFloatDataContract()
         {
             var floatField = CreateFloatField();
             var input = (Double)0.0;
-            Assert.Equal(floatField.ValueFromJson(input), input);
-            Assert.Equal(floatField.ValueToJson(input), input);
+            Assert.Equal(floatField.ValueFromDataContract(input), input);
+            Assert.Equal(floatField.ValueToDataContract(input), input);
         }
 
         [Fact]
-        public void ValidStringJson()
+        public void ValidStringDataContract()
         {
             var stringField = CreateStringField();
             var input = "";
-            Assert.Equal(stringField.ValueFromJson(input), input);
-            Assert.Equal(stringField.ValueToJson(input), input);
+            Assert.Equal(stringField.ValueFromDataContract(input), input);
+            Assert.Equal(stringField.ValueToDataContract(input), input);
         }
 
         [Fact]
-        public void ValidDateJson()
+        public void ValidDateDataContract()
         {
             var dateField = CreateDateField();
             var input = "2000-01-01";
-            var date = dateField.ValueFromJson(input);
+            var date = dateField.ValueFromDataContract(input);
             var hutelDate = date as HutelDate;
             Assert.NotNull(hutelDate);
             Assert.Equal(hutelDate.DateTime, new DateTime(2000, 1, 1));
-            Assert.Equal(dateField.ValueToJson(hutelDate), input);
+            Assert.Equal(dateField.ValueToDataContract(hutelDate), input);
         }
 
-        public static IEnumerable<Object[]> ValidTimeJsonData
+        public static IEnumerable<Object[]> ValidTimeDataContractData
         {
             get
             {
@@ -73,37 +74,37 @@ namespace hutel.Tests
         }
 
         [Theory]
-        [MemberData(nameof(ValidTimeJsonData))]
-        public void ValidTimeJson(string input, TimeSpan expectedValue)
+        [MemberData(nameof(ValidTimeDataContractData))]
+        public void ValidTimeDataContract(string input, TimeSpan expectedValue)
         {
             var timeField = CreateTimeField();
-            var time = timeField.ValueFromJson(input);
+            var time = timeField.ValueFromDataContract(input);
             var hutelTime = time as HutelTime;
             Assert.NotNull(hutelTime);
             Assert.Equal(hutelTime.TimeSpan, expectedValue);
-            Assert.Equal(timeField.ValueToJson(hutelTime), input);
+            Assert.Equal(timeField.ValueToDataContract(hutelTime), input);
         }
 
         [Fact]
-        public void EnumFromJson()
+        public void EnumFromDataContract()
         {
             var enumField = CreateEnumField();
-            Assert.Equal(enumField.ValueFromJson(EnumValueA), EnumValueA);
-            Assert.Equal(enumField.ValueFromJson(EnumValueB), EnumValueB);
-            Assert.Throws<TypeValidationException>(() => enumField.ValueFromJson(0));
-            Assert.Throws<TypeValidationException>(() => enumField.ValueFromJson(""));
-            Assert.Throws<TypeValidationException>(() => enumField.ValueFromJson("c"));
+            Assert.Equal(enumField.ValueFromDataContract(EnumValueA), EnumValueA);
+            Assert.Equal(enumField.ValueFromDataContract(EnumValueB), EnumValueB);
+            Assert.Throws<TypeValidationException>(() => enumField.ValueFromDataContract(0));
+            Assert.Throws<TypeValidationException>(() => enumField.ValueFromDataContract(""));
+            Assert.Throws<TypeValidationException>(() => enumField.ValueFromDataContract("c"));
         }
 
         [Fact]
-        public void EnumToJson()
+        public void EnumToDataContract()
         {
             var enumField = CreateEnumField();
-            Assert.Equal(enumField.ValueToJson(EnumValueA), EnumValueA);
-            Assert.Equal(enumField.ValueToJson(EnumValueB), EnumValueB);
-            Assert.Throws<TypeValidationException>(() => enumField.ValueToJson(0));
-            Assert.Throws<TypeValidationException>(() => enumField.ValueToJson(""));
-            Assert.Throws<TypeValidationException>(() => enumField.ValueToJson("c"));
+            Assert.Equal(enumField.ValueToDataContract(EnumValueA), EnumValueA);
+            Assert.Equal(enumField.ValueToDataContract(EnumValueB), EnumValueB);
+            Assert.Throws<TypeValidationException>(() => enumField.ValueToDataContract(0));
+            Assert.Throws<TypeValidationException>(() => enumField.ValueToDataContract(""));
+            Assert.Throws<TypeValidationException>(() => enumField.ValueToDataContract("c"));
         }
 
         public static IEnumerable<Object[]> InvalidFieldData
@@ -131,9 +132,9 @@ namespace hutel.Tests
         
         [Theory]
         [MemberData(nameof(InvalidFieldData))]
-        public void InvalidFieldFromJson(BaseTagField field, Object input)
+        public void InvalidFieldFromDataContract(BaseTagField field, Object input)
         {
-            Assert.Throws<TypeValidationException>(() => field.ValueFromJson(input));
+            Assert.Throws<TypeValidationException>(() => field.ValueFromDataContract(input));
         }
     }
 }

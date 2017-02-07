@@ -50,7 +50,7 @@ namespace hutel.Tests
         }
 
         [Fact]
-        public void FromJsonValid()
+        public void FromDataContractValid()
         {
             var extraFields = new Dictionary<string, Object>
             {
@@ -61,18 +61,18 @@ namespace hutel.Tests
                 { TimeFieldName, "10:09:08" },
                 { EnumFieldName, EnumValueA }
             };
-            var pointJson = new PointWithIdJson
+            var pointDataContract = new PointWithIdDataContract
             {
                 Id = SampleGuid,
                 TagId = CompleteTag.Id,
                 Date = SampleDate,
                 Extra = extraFields
             };
-            var point = Point.FromJson(pointJson, AllTags);
-            Assert.Equal(point.Id, pointJson.Id);
+            var point = Point.FromDataContract(pointDataContract, AllTags);
+            Assert.Equal(point.Id, pointDataContract.Id);
             Assert.Equal(point.TagId, CompleteTag.Id);
             Assert.Equal(point.Date.DateTime, new DateTime(2000, 10, 1));
-            var pointJsonExtraList = pointJson.Extra.Keys.ToList();
+            var pointJsonExtraList = pointDataContract.Extra.Keys.ToList();
             pointJsonExtraList.Sort();
             var pointExtraList = point.Extra.Keys.ToList();
             pointExtraList.Sort();
@@ -80,22 +80,23 @@ namespace hutel.Tests
         }
 
         [Fact]
-        public void FromJsonUnknownTag()
+        public void FromDataContractUnknownTag()
         {
-            var pointJson = new PointWithIdJson
+            var pointDataContract = new PointWithIdDataContract
             {
                 Id = SampleGuid,
                 TagId = "unknownTag",
                 Date = SampleDate,
                 Extra = new Dictionary<string, Object>()
             };
-            Assert.Throws<PointValidationException>(() => Point.FromJson(pointJson, AllTags));
+            Assert.Throws<PointValidationException>(
+                () => Point.FromDataContract(pointDataContract, AllTags));
         }
 
         [Fact]
-        public void FromJsonUnknownProperty()
+        public void FromDataContractUnknownProperty()
         {
-            var pointJson = new PointWithIdJson
+            var pointDataContract = new PointWithIdDataContract
             {
                 Id = SampleGuid,
                 TagId = EmptyTag.Id,
@@ -105,20 +106,22 @@ namespace hutel.Tests
                     { "unknownField", "value" }
                 }
             };
-            Assert.Throws<PointValidationException>(() => Point.FromJson(pointJson, AllTags));
+            Assert.Throws<PointValidationException>(
+                () => Point.FromDataContract(pointDataContract, AllTags));
         }
 
         [Fact]
-        public void FromJsonMissingProperty()
+        public void FromDataContractMissingProperty()
         {
-            var pointJson = new PointWithIdJson
+            var pointDataContract = new PointWithIdDataContract
             {
                 Id = SampleGuid,
                 TagId = CompleteTag.Id,
                 Date = SampleDate,
                 Extra = new Dictionary<string, Object>()
             };
-            Assert.Throws<PointValidationException>(() => Point.FromJson(pointJson, AllTags));
+            Assert.Throws<PointValidationException>(
+                () => Point.FromDataContract(pointDataContract, AllTags));
         }
     }
 }

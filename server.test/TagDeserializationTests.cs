@@ -47,8 +47,8 @@ namespace hutel.Tests
                     }}
                 ]
             }}";
-            var tagJson = JsonConvert.DeserializeObject<TagJson>(json);
-            var tag = Tag.FromJson(tagJson);
+            var tagDataContract = JsonConvert.DeserializeObject<TagDataContract>(json);
+            var tag = Tag.FromDataContract(tagDataContract);
             Assert.Equal(tag.Id, "completeTag");
             Assert.Contains(IntFieldName, tag.Fields.Keys);
             Assert.IsType<IntTagField>(tag.Fields[IntFieldName]);
@@ -75,8 +75,8 @@ namespace hutel.Tests
         {
             Assert.Throws<TagValidationException>(() =>
                 {
-                    var tagJson = JsonConvert.DeserializeObject<TagJson>(json);
-                    Tag.FromJson(tagJson);
+                    var tagDataContract = JsonConvert.DeserializeObject<TagDataContract>(json);
+                    Tag.FromDataContract(tagDataContract);
                 });
         }
 
@@ -103,8 +103,8 @@ namespace hutel.Tests
             }}";
             Assert.Throws<TagValidationException>(() => 
                 {
-                    var tagJson = JsonConvert.DeserializeObject<TagJson>(json);
-                    Tag.FromJson(tagJson);
+                    var tagDataContract = JsonConvert.DeserializeObject<TagDataContract>(json);
+                    Tag.FromDataContract(tagDataContract);
                 });
         }
     }

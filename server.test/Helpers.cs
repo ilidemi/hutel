@@ -9,63 +9,63 @@ namespace hutel.Tests
     {
         public static IntTagField CreateIntField()
         {
-            var tagFieldJson = new TagFieldJson
+            var fieldDataContract = new TagFieldDataContract
             {
                 Name = IntFieldName,
                 Type = TagFieldConstants.Int
             };
-            return new IntTagField(tagFieldJson);
+            return new IntTagField(fieldDataContract);
         }
 
         public static FloatTagField CreateFloatField()
         {
-            var tagFieldJson = new TagFieldJson
+            var fieldDataContract = new TagFieldDataContract
             {
                 Name = FloatFieldName,
                 Type = TagFieldConstants.Float
             };
-            return new FloatTagField(tagFieldJson);
+            return new FloatTagField(fieldDataContract);
         }
 
         public static StringTagField CreateStringField()
         {
-            var tagFieldJson = new TagFieldJson
+            var fieldDataContract = new TagFieldDataContract
             {
                 Name = StringFieldName,
                 Type = TagFieldConstants.String
             };
-            return new StringTagField(tagFieldJson);
+            return new StringTagField(fieldDataContract);
         }
 
         public static DateTagField CreateDateField()
         {
-            var tagFieldJson = new TagFieldJson
+            var fieldDataContract = new TagFieldDataContract
             {
                 Name = DateFieldName,
                 Type = TagFieldConstants.Date
             };
-            return new DateTagField(tagFieldJson);
+            return new DateTagField(fieldDataContract);
         }
 
         public static TimeTagField CreateTimeField()
         {
-            var tagFieldJson = new TagFieldJson
+            var fieldDataContract = new TagFieldDataContract
             {
                 Name = TimeFieldName,
                 Type = TagFieldConstants.Time
             };
-            return new TimeTagField(tagFieldJson);
+            return new TimeTagField(fieldDataContract);
         }
 
         public static EnumTagField CreateEnumField()
         {
-            var tagFieldJson = new TagFieldJson
+            var fieldDataContract = new TagFieldDataContract
             {
                 Name = EnumFieldName,
                 Type = TagFieldConstants.Enum,
                 Values = new List<string>{ EnumValueA, EnumValueB }
             };
-            return new EnumTagField(tagFieldJson);
+            return new EnumTagField(fieldDataContract);
         }
     }
 }

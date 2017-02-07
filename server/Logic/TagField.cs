@@ -22,44 +22,44 @@ namespace hutel.Logic
 
         public string Name { get { return _name; } }
 
-        public BaseTagField(TagFieldJson tagFieldJson)
+        public BaseTagField(TagFieldDataContract tagFieldDataContract)
         {
-            _name = tagFieldJson.Name;
+            _name = tagFieldDataContract.Name;
         }
 
-        public abstract Object ValueFromJson(Object obj);
+        public abstract Object ValueFromDataContract(Object obj);
 
-        public abstract Object ValueToJson(Object obj);
+        public abstract Object ValueToDataContract(Object obj);
 
-        public virtual TagFieldJson ToJson()
+        public virtual TagFieldDataContract ToDataContract()
         {
-            return new TagFieldJson
+            return new TagFieldDataContract
             {
                 Name = _name,
                 Type = TypeString
             };
         }
 
-        public static BaseTagField FromJson(TagFieldJson tagFieldJson)
+        public static BaseTagField FromDataContract(TagFieldDataContract fieldDataContract)
         {
-            if (tagFieldJson.Name == string.Empty)
+            if (fieldDataContract.Name == string.Empty)
             {
                 throw new TagValidationException("Field name is empty");
             }
             Type type;
-            if (!StringToFieldType.TryGetValue(tagFieldJson.Type, out type))
+            if (!StringToFieldType.TryGetValue(fieldDataContract.Type, out type))
             {
                 throw new TagValidationException(
-                    $"Unknown type {tagFieldJson.Type} in tag field {tagFieldJson.Name}");
+                    $"Unknown type {fieldDataContract.Type} in tag field {fieldDataContract.Name}");
             }
             try
             {
-                return (BaseTagField)Activator.CreateInstance(type, tagFieldJson);
+                return (BaseTagField)Activator.CreateInstance(type, fieldDataContract);
             }
             catch (Exception ex)
             {
                 throw new TagValidationException(
-                    $"Cannot initialize field {tagFieldJson.Name}", ex);
+                    $"Cannot initialize field {fieldDataContract.Name}", ex);
             }
         }
 
@@ -81,66 +81,66 @@ namespace hutel.Logic
     {
         public override string TypeString { get { return TagFieldConstants.Int; } }
 
-        public override Object ValueFromJson(Object obj)
+        public override Object ValueFromDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(Int64));
             return obj;
         }
 
-        public override Object ValueToJson(Object obj)
+        public override Object ValueToDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(Int64));
             return obj;
         }
 
-        public IntTagField(TagFieldJson tagFieldJson) : base(tagFieldJson) {}
+        public IntTagField(TagFieldDataContract fieldDataContract) : base(fieldDataContract) {}
     }
 
     public class FloatTagField : BaseTagField
     {
         public override string TypeString { get { return TagFieldConstants.Float; } }
 
-        public override Object ValueFromJson(Object obj)
+        public override Object ValueFromDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(Double));
             return obj;
         }
 
-        public override Object ValueToJson(Object obj)
+        public override Object ValueToDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(Double));
             return obj;
         }
 
-        public FloatTagField(TagFieldJson tagFieldJson) : base(tagFieldJson) {}
+        public FloatTagField(TagFieldDataContract fieldDataContract) : base(fieldDataContract) {}
     }
 
     public class StringTagField : BaseTagField
     {
         public override string TypeString { get { return TagFieldConstants.String; } }
 
-        public override Object ValueFromJson(Object obj)
+        public override Object ValueFromDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(string));
             return obj;
         }
 
-        public override Object ValueToJson(Object obj)
+        public override Object ValueToDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(string));
             return obj;
         }
 
-        public StringTagField(TagFieldJson tagFieldJson) : base(tagFieldJson) {}
+        public StringTagField(TagFieldDataContract fieldDataContract) : base(fieldDataContract) {}
     }
 
     public class DateTagField : BaseTagField
     {
         public override string TypeString { get { return TagFieldConstants.Date; } }
 
-        public DateTagField(TagFieldJson tagFieldJson) : base(tagFieldJson) {}
+        public DateTagField(TagFieldDataContract fieldDataContract) : base(fieldDataContract) {}
         
-        public override Object ValueFromJson(Object obj)
+        public override Object ValueFromDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(string));
             try
@@ -153,7 +153,7 @@ namespace hutel.Logic
             }
         }
 
-        public override Object ValueToJson(Object obj)
+        public override Object ValueToDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(HutelDate));
             return ((HutelDate)obj).ToString();
@@ -164,9 +164,9 @@ namespace hutel.Logic
     {
         public override string TypeString { get { return TagFieldConstants.Time; } }
 
-        public TimeTagField(TagFieldJson tagFieldJson) : base(tagFieldJson) {}
+        public TimeTagField(TagFieldDataContract fieldDataContract) : base(fieldDataContract) {}
         
-        public override Object ValueFromJson(Object obj)
+        public override Object ValueFromDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(string));
             try
@@ -179,7 +179,7 @@ namespace hutel.Logic
             }
         }
 
-        public override Object ValueToJson(Object obj)
+        public override Object ValueToDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(HutelTime));
             return ((HutelTime)obj).ToString();
@@ -198,33 +198,33 @@ namespace hutel.Logic
             }
         }
 
-        public EnumTagField(TagFieldJson tagFieldJson)
-            : base(tagFieldJson)
+        public EnumTagField(TagFieldDataContract fieldDataContract)
+            : base(fieldDataContract)
         {
-            if (tagFieldJson.Values == null || !tagFieldJson.Values.Any())
+            if (fieldDataContract.Values == null || !fieldDataContract.Values.Any())
             {
                 throw new ArgumentOutOfRangeException("Empty enum is useless");
             }
-            _values = tagFieldJson.Values;
+            _values = fieldDataContract.Values;
         }
 
-        public override Object ValueFromJson(Object obj)
+        public override Object ValueFromDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(string));
             throwIfNotInCollection(obj);
             return obj;
         }
 
-        public override Object ValueToJson(Object obj)
+        public override Object ValueToDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(string));
             throwIfNotInCollection(obj);
             return obj;
         }
 
-        public override TagFieldJson ToJson()
+        public override TagFieldDataContract ToDataContract()
         {
-            return new TagFieldJson
+            return new TagFieldDataContract
             {
                 Name = _name,
                 Type = TypeString,

@@ -18,13 +18,13 @@ namespace hutel.Logic
 
         public Dictionary<string, object> Extra { get; set; }
 
-        public PointWithIdJson ToJson(Dictionary<string, Tag> tags)
+        public PointWithIdDataContract ToDataContract(Dictionary<string, Tag> tags)
         {
             var tag = tags[TagId];
             var jsonExtra = Extra.ToDictionary(
                 kvPair => kvPair.Key,
-                kvPair => tag.Fields[kvPair.Key].ValueToJson(kvPair.Value));
-            return new PointWithIdJson
+                kvPair => tag.Fields[kvPair.Key].ValueToDataContract(kvPair.Value));
+            return new PointWithIdDataContract
             {
                 Id = Id,
                 TagId = TagId,
@@ -33,14 +33,16 @@ namespace hutel.Logic
             };
         }
 
-        public static Point FromJson(PointJson pointJson, Guid id, Dictionary<string, Tag> tags)
+        public static Point FromDataContract(
+            PointDataContract input, Guid id, Dictionary<string, Tag> tags)
         {
-            return FromFields(id, pointJson.TagId, pointJson.Date, pointJson.Extra, tags);
+            return FromFields(id, input.TagId, input.Date, input.Extra, tags);
         }
 
-        public static Point FromJson(PointWithIdJson pointJson, Dictionary<string, Tag> tags)
+        public static Point FromDataContract(
+            PointWithIdDataContract input, Dictionary<string, Tag> tags)
         {
-            return FromFields(pointJson.Id, pointJson.TagId, pointJson.Date, pointJson.Extra, tags);
+            return FromFields(input.Id, input.TagId, input.Date, input.Extra, tags);
         }
 
         private static Point FromFields(
@@ -71,11 +73,13 @@ namespace hutel.Logic
                 }
                 try
                 {
-                    pointExtra.Add(tagField.Name, tagField.ValueFromJson(extra[tagField.Name]));
+                    pointExtra.Add(
+                        tagField.Name, tagField.ValueFromDataContract(extra[tagField.Name]));
                 }
                 catch(TypeValidationException ex)
                 {
-                    throw new PointValidationException($"Malformed property: {extra[tagField.Name]}", ex);
+                    throw new PointValidationException(
+                        $"Malformed property: {extra[tagField.Name]}", ex);
                 }
             }
             try
