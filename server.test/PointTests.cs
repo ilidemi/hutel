@@ -5,6 +5,7 @@ using hutel.Logic;
 using hutel.Models;
 using Xunit;
 using static hutel.Tests.Constants;
+using static hutel.Tests.Helpers;
 
 namespace hutel.Tests
 {
@@ -17,14 +18,14 @@ namespace hutel.Tests
                 return new Tag
                 {
                     Id = "completeTag",
-                    Fields = new List<Tag.Field>
+                    Fields = new List<BaseTagField>
                     {
-                        new Tag.Field{ Name = IntFieldName, Type = new IntFieldType() },
-                        new Tag.Field{ Name = FloatFieldName, Type = new FloatFieldType() },
-                        new Tag.Field{ Name = StringFieldName, Type = new StringFieldType() },
-                        new Tag.Field{ Name = DateFieldName, Type = new DateFieldType() },
-                        new Tag.Field{ Name = TimeFieldName, Type = new TimeFieldType() },
-                        new Tag.Field{ Name = EnumFieldName, Type = new EnumFieldType(new[] { EnumValueA, EnumValueB }) }
+                        CreateIntField(),
+                        CreateFloatField(),
+                        CreateStringField(),
+                        CreateDateField(),
+                        CreateTimeField(),
+                        CreateEnumField()
                     }.ToDictionary(field => field.Name, field => field)
                 };
             }
@@ -36,7 +37,7 @@ namespace hutel.Tests
                 return new Tag
                 {
                     Id = "emptyTag",
-                    Fields = new Dictionary<string, Tag.Field>()
+                    Fields = new Dictionary<string, BaseTagField>()
                 };
             }
         }

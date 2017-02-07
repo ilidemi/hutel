@@ -204,8 +204,7 @@ namespace hutel.Controllers
                 var pointsString = System.IO.File.ReadAllText(_storagePath);
                 var pointsJsonList = JsonConvert.DeserializeObject<PointsStorageJson>(pointsString);
                 var duplicatePoints = pointsJsonList
-                    .Select(point => point.Id)
-                    .GroupBy(id => id)
+                    .GroupBy(point => point.Id)
                     .Where(g => g.Count() > 1);
                 if (duplicatePoints.Any())
                 {
@@ -247,21 +246,22 @@ namespace hutel.Controllers
                 throw new System.IO.FileNotFoundException("Tags config doesn't exist");
             }
             var tagsString = System.IO.File.ReadAllText(_tagsPath);
-            var tagsList = JsonConvert.DeserializeObject<List<Tag>>(tagsString);
-            if (!tagsList.Any())
+            var tagsJsonList = JsonConvert.DeserializeObject<List<TagJson>>(tagsString);
+            if (!tagsJsonList.Any())
             {
                 throw new InvalidOperationException("Tags list is empty");
             }
-            var duplicateTags = tagsList
-                .Select(tag => tag.Id)
-                .GroupBy(id => id)
+            var duplicateTags = tagsJsonList
+                .GroupBy(tag => tag.Id)
                 .Where(g => g.Count() > 1);
             if (duplicateTags.Any())
             {
                 throw new InvalidOperationException(
                     $"Duplicate tag ids in config: {string.Join(", ", duplicateTags)}");
             }
-            return tagsList.ToDictionary(tag => tag.Id, tag => tag);
+            return tagsJsonList.ToDictionary(
+                tagJson => tagJson.Id,
+                tagJson => Tag.FromJson(tagJson));
         }
 
         private static void WriteTags(Dictionary<string, Tag> tags)
@@ -274,8 +274,9 @@ namespace hutel.Controllers
             {
                 System.IO.File.Copy(_tagsPath, _tagsBackupPath);
             }
-            var tagsJson = JsonConvert.SerializeObject(tags.Values, Formatting.Indented);
-            System.IO.File.WriteAllText(_tagsPath, tagsJson);
+            var tagsJson = tags.Values.Select(tag => tag.ToJson());
+            var tagsJsonString = JsonConvert.SerializeObject(tagsJson, Formatting.Indented);
+            System.IO.File.WriteAllText(_tagsPath, tagsJsonString);
         }
     }
 }

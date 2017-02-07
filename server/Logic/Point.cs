@@ -23,7 +23,7 @@ namespace hutel.Logic
             var tag = tags[TagId];
             var jsonExtra = Extra.ToDictionary(
                 kvPair => kvPair.Key,
-                kvPair => tag.Fields[kvPair.Key].Type.ToJson(kvPair.Value));
+                kvPair => tag.Fields[kvPair.Key].ValueToJson(kvPair.Value));
             return new PointWithIdJson
             {
                 Id = Id,
@@ -71,7 +71,7 @@ namespace hutel.Logic
                 }
                 try
                 {
-                    pointExtra.Add(tagField.Name, tagField.Type.FromJson(extra[tagField.Name]));
+                    pointExtra.Add(tagField.Name, tagField.ValueFromJson(extra[tagField.Name]));
                 }
                 catch(TypeValidationException ex)
                 {
