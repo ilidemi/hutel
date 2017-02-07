@@ -17,7 +17,8 @@
         "fields": [
             {
                 "name": "value",
-                "type": [
+                "type": "enum",
+                "values": [
                     "yes",
                     "no"
                 ]
