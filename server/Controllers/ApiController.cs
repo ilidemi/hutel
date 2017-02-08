@@ -151,7 +151,8 @@ namespace hutel.Controllers
         public IActionResult GetAllTags()
         {
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
-            return Json(tags.Values);
+            var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
+            return Json(tagsDataContract);
         }
 
         [HttpPut("/api/tags")]
