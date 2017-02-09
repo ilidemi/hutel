@@ -14,19 +14,41 @@
             <div v-if="selectedTag !== null">
                 <button v-on:click="resetTag">⬅ Back</button>
                 <div>{{ selectedTag.id }}</div>
-                <div v-for="field in selectedTag.fields" display="inline">
-                    <div>{{ field.name }}:</div>
-                    <input v-model="tagInput[field.name]">
-                </div>
-                <div display="inline">
-                    <div>date:</div>
-                    <input v-model="tagInput.date">
-                    <button v-on:click="incrementDate">+</button>
-                    <button v-on:click="decrementDate">-</button>
+                <div v-for="field of pointInput">
+                    {{ field.tagField.name }}
+                    <input
+                        v-if="field.tagField.type === 'int'"
+                        v-bind:value="field.value"
+                        v-on:change="parseInt(field, $event.target.value)">
+                    <input
+                        v-if="field.tagField.type === 'float'"
+                        v-model="field.value"
+                        v-on:change="parseFloat(field, $event.target.value)">
+                    <input
+                        v-if="field.tagField.type === 'string'"
+                        v-model="field.value"
+                        v-on:change="parseString(field, $event.target.value)">
+                    <div v-if="field.tagField.type === 'date'">
+                        <input
+                            v-model="field.value"
+                            v-on:change="parseDate(field, $event.target.value)">
+                        <button v-on:click="incrementDate(field)">+</button>
+                        <button v-on:click="decrementDate(field)">-</button>
+                    </div>
+                    <input
+                        v-if="field.tagField.type === 'time'"
+                        v-model="field.value"
+                        v-on:change="parseTime(field, $event.target.value)">
+                    <input
+                        v-if="field.tagField.type === 'enum'"
+                        v-model="field.value"
+                        v-on:change="parseEnum(field, $event.target.value)">
+                    {{ field.validationMessage }}
                 </div>
                 <button v-on:click="submit">Submit</button>
             </div>
             {{ message }}
+            {{ message2 }}
         </div>
         <script src="https://unpkg.com/vue/dist/vue.js"></script>
         <script src="https://unpkg.com/vue-resource@1.1.0/dist/vue-resource.js"></script>
