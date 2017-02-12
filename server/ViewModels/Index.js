@@ -5,20 +5,22 @@ var timeFormat = "HH:mm:ss"
 var app = new Vue({
   el: '#app',
   data: {
-    message: 'Hello Vue!',
-    message2: 'Message2',
     tags: [],
     selectedTag: null,
     pointInput: null,
     point: null,
+    pointJson: null,
+    response: null,
+    history: [],
   },
   created: function() {
-    var resource = this.$resource('api/tags');
-    resource.get().then(response => {
+    var tagsResource = this.$resource('api/tags');
+    tagsResource.get().then(response => {
       this.tags = response.body;
     }, response => {
-      this.message = "fail";
+      this.response = response.body;
     });
+    this.updateHistory();
   },
   methods: {
     selectTag: function(tag) {
@@ -41,6 +43,33 @@ var app = new Vue({
       this.selectedTag = null;
       this.pointInput = null;
       this.point = null;
+    },
+    updateHistory: function() {
+      var historyStartDate = moment().subtract(3, 'days').format(dateFormat);
+      var pointsResource = this.$resource('api/points', { startDate: historyStartDate});
+      pointsResource.get().then(response => {
+        var history = [];
+        for (point of response.body) {
+          var historyPoint = {
+            tagId: point.tagId,
+            date: point.date,
+            dynamicValues: this.getDynamicValues(point)
+          };
+          history.push(historyPoint);
+        }
+        this.history = history;
+      }, response => {
+        this.response = response.body;
+      });
+    },
+    getDynamicValues: function(point) {
+      var result = {};
+      for (var field in point) {
+        if (field !== 'id' && field !== 'tagId' && field !== 'date') {
+          result[field] = point[field];
+        }
+      }
+      return result;
     },
     incrementDate: function(field) {
       var date = moment(field.value);
@@ -112,15 +141,20 @@ var app = new Vue({
           return;
         }
       }
+      this.pointJson = JSON.stringify(this.point, null, '    ');
       var resource = this.$resource('api/points');
       resource.save(this.point).then(response => {
-        this.message = response.body;
+        this.response = response.body;
         this.resetTag();
+        this.updateHistory();
       }, response => {
-        this.message = response.body;
+        this.response = response.body;
         this.resetTag();
-      })
-      this.message2 = JSON.stringify(this.point);
+      });
+      setTimeout(function(){
+        this.response = null;
+        this.pointJson = null;
+      }, 10 * 1000);
     }
   }
 });

@@ -55,11 +55,11 @@ namespace hutel.Controllers
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
-            return Json(
-                points.Values
+            var filteredPoints = points.Values
                     .Where(point => startDate == null || point.Date >= new HutelDate(startDate))
-                    .Select(p => p.ToDataContract(tags))
-                    .ToList());
+                    .ToList();
+            filteredPoints.Sort((p1, p2) => p2.Date.DateTime.CompareTo(p1.Date.DateTime));
+            return Json(filteredPoints.Select(p => p.ToDataContract(tags)));
         }
 
         [HttpPut("/api/points")]

@@ -6,10 +6,22 @@
     </head>
     <body>
         <div id="app">
-            <div v-if="selectedTag === null" display="inline">
+            <div v-if="selectedTag === null">
                 <div v-for="tag in tags">
                     <button v-on:click="selectTag(tag)">{{ tag.id }}</button>
                 </div>
+                <br/>
+                <table>
+                    <tbody>
+                        <tr v-for="point of history">
+                            <td>{{ point.date }}</td>
+                            <td>{{ point.tagId }}</td>
+                            <td v-for="field of point.dynamicValues">
+                                {{ field }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div v-if="selectedTag !== null">
                 <button v-on:click="resetTag">⬅ Back</button>
@@ -28,27 +40,32 @@
                         v-if="field.tagField.type === 'string'"
                         v-model="field.value"
                         v-on:change="parseString(field, $event.target.value)">
-                    <div v-if="field.tagField.type === 'date'">
+                    <span v-if="field.tagField.type === 'date'">
                         <input
                             v-model="field.value"
                             v-on:change="parseDate(field, $event.target.value)">
                         <button v-on:click="incrementDate(field)">+</button>
                         <button v-on:click="decrementDate(field)">-</button>
-                    </div>
+                    </span>
                     <input
                         v-if="field.tagField.type === 'time'"
                         v-model="field.value"
                         v-on:change="parseTime(field, $event.target.value)">
-                    <input
-                        v-if="field.tagField.type === 'enum'"
-                        v-model="field.value"
-                        v-on:change="parseEnum(field, $event.target.value)">
+                    <span v-if="field.tagField.type === 'enum'">
+                        (|<span v-for="value of field.tagField.values"> {{ value }} |</span>)
+                        <input
+                            v-model="field.value"
+                            v-on:change="parseEnum(field, $event.target.value)">
+                    </span>
                     {{ field.validationMessage }}
                 </div>
                 <button v-on:click="submit">Submit</button>
             </div>
-            {{ message }}
-            {{ message2 }}
+            <br/>
+            <div v-if="pointJson !== null">Request: </div>
+            <pre>{{ pointJson }}</pre>
+            <div v-if="response !== null">Response: </div>
+            <pre>{{ response }}</pre>
         </div>
         <script src="https://unpkg.com/vue/dist/vue.js"></script>
         <script src="https://unpkg.com/vue-resource@1.1.0/dist/vue-resource.js"></script>
