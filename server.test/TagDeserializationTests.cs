@@ -19,67 +19,65 @@ namespace hutel.Tests
                 'fields': [
                     {{
                         'name': '{IntFieldName}',
-                        'type': 'int'
+                        'type': '{TagFieldConstants.Int}'
                     }},
                     {{
                         'name': '{FloatFieldName}',
-                        'type': 'float'
+                        'type': '{TagFieldConstants.Float}'
                     }},
                     {{
                         'name': '{StringFieldName}',
-                        'type': 'string'
+                        'type': '{TagFieldConstants.String}'
                     }},
                     {{
                         'name': '{DateFieldName}',
-                        'type': 'date'
+                        'type': '{TagFieldConstants.Date}'
                     }},
                     {{
                         'name': '{TimeFieldName}',
-                        'type': 'time'
+                        'type': '{TagFieldConstants.Time}'
                     }},
                     {{
                         'name': '{EnumFieldName}',
-                        'type': [
+                        'type': '{TagFieldConstants.Enum}',
+                        'values': [
                             '{EnumValueA}',
                             '{EnumValueB}'
                         ]
                     }}
                 ]
             }}";
-            var tag = JsonConvert.DeserializeObject<Tag>(json);
+            var tagDataContract = JsonConvert.DeserializeObject<TagDataContract>(json);
+            var tag = Tag.FromDataContract(tagDataContract);
             Assert.Equal(tag.Id, "completeTag");
             Assert.Contains(IntFieldName, tag.Fields.Keys);
-            Assert.IsType<IntFieldType>(tag.Fields[IntFieldName].Type);
+            Assert.IsType<IntTagField>(tag.Fields[IntFieldName]);
             Assert.Contains(FloatFieldName, tag.Fields.Keys);
-            Assert.IsType<FloatFieldType>(tag.Fields[FloatFieldName].Type);
+            Assert.IsType<FloatTagField>(tag.Fields[FloatFieldName]);
             Assert.Contains(StringFieldName, tag.Fields.Keys);
-            Assert.IsType<StringFieldType>(tag.Fields[StringFieldName].Type);
+            Assert.IsType<StringTagField>(tag.Fields[StringFieldName]);
             Assert.Contains(DateFieldName, tag.Fields.Keys);
-            Assert.IsType<DateFieldType>(tag.Fields[DateFieldName].Type);
+            Assert.IsType<DateTagField>(tag.Fields[DateFieldName]);
             Assert.Contains(TimeFieldName, tag.Fields.Keys);
-            Assert.IsType<TimeFieldType>(tag.Fields[TimeFieldName].Type);
+            Assert.IsType<TimeTagField>(tag.Fields[TimeFieldName]);
             Assert.Contains(EnumFieldName, tag.Fields.Keys);
-            Assert.IsType<EnumFieldType>(tag.Fields[EnumFieldName].Type);
-            var enumFieldType = tag.Fields[EnumFieldName].Type as EnumFieldType;
+            Assert.IsType<EnumTagField>(tag.Fields[EnumFieldName]);
+            var enumFieldType = tag.Fields[EnumFieldName] as EnumTagField;
             Assert.Contains(EnumValueA, enumFieldType.Values);
             Assert.Contains(EnumValueB, enumFieldType.Values);
         }
 
         [Theory]
-        [InlineData("{ 'fields': [{ 'name': 'f', 'type': 'int' }] }")]
-        [InlineData("{ 'id': 'id' }")]
         [InlineData("{ 'id': 'id', 'fields': [] }")]
         [InlineData("{ 'id': 'id', 'fields': [{ 'name': 'f', 'type': 'int' }, { 'name': 'f', 'type': 'float' }] }")]
         [InlineData("{ 'id': 'id', 'fields': [{ 'name': 'f', 'type': 'unknownType' }] }")]
-        [InlineData("{ 'id': 'id', 'fields': [{ 'name': 'f', 'type': [] }] }")]
-        [InlineData("{ 'id': 'id', 'fields': [{ 'name': 'f', 'type': {} }] }")]
-        [InlineData("{ 'unknownField: '', 'id': 'id', 'fields': [{ 'name': 'f', 'type': 'int' }] }")]
-        [InlineData("{ 'id': 'id', 'fields': [{ 'unknownField: '', 'name': 'f', 'type': 'int' }] }")]
-        [InlineData("{ 'id': 'id', 'fields': [{ 'type': 'int' }] }")]
-        [InlineData("{ 'id': 'id', 'fields': [{ 'name': 'f' }] }")]
         public void InvalidTag(string json)
         {
-            Assert.Throws<JsonReaderException>(() => JsonConvert.DeserializeObject<Tag>(json));
+            Assert.Throws<TagValidationException>(() =>
+                {
+                    var tagDataContract = JsonConvert.DeserializeObject<TagDataContract>(json);
+                    Tag.FromDataContract(tagDataContract);
+                });
         }
 
         public static IEnumerable<object[]> TagWithReservedFieldData
@@ -94,8 +92,20 @@ namespace hutel.Tests
         [MemberDataAttribute(nameof(TagWithReservedFieldData))]
         public void TagWithReservedField(string fieldName)
         {
-            var json = $"{{ 'id': 'id', 'fields': [{{ 'name': {fieldName}, 'type': 'int' }}] }}";
-            Assert.Throws<JsonReaderException>(() => JsonConvert.DeserializeObject<Tag>(json));
+            var json = $@"{{
+                'id': 'id',
+                'fields': [
+                    {{
+                        'name': '{fieldName}',
+                        'type': '{TagFieldConstants.Int}'
+                    }}
+                ]
+            }}";
+            Assert.Throws<TagValidationException>(() => 
+                {
+                    var tagDataContract = JsonConvert.DeserializeObject<TagDataContract>(json);
+                    Tag.FromDataContract(tagDataContract);
+                });
         }
     }
 }

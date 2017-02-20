@@ -20,6 +20,7 @@ namespace hutel.Controllers
         private const string _storagePath = "storage.json";
         private const string _storageBackupPath = "storage.json.bak";
         private const string _tagsPath = "tags.json";
+        private const string _tagsBackupPath = "tags.json.bak";
 
         public ApiController(IMemoryCache memoryCache, ILogger<ApiController> logger)
         {
@@ -50,27 +51,27 @@ namespace hutel.Controllers
         }
 
         [HttpGet("/api/points")]
-        public IActionResult GetAll(string startDate)
+        public IActionResult GetAllPoints(string startDate)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
             return Json(
                 points.Values
                     .Where(point => startDate == null || point.Date >= new HutelDate(startDate))
-                    .Select(p => p.ToJson(tags))
+                    .Select(p => p.ToDataContract(tags))
                     .ToList());
         }
 
         [HttpPut("/api/points")]
         [ValidateModelState]
-        public IActionResult PutAll([FromBody]PointsStorageJson replacementPoints)
+        public IActionResult PutAllPoints([FromBody]PointsStorageDataContract replacementPoints)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
             IEnumerable<Point> pointsList;
             try
             {
-                pointsList = replacementPoints.Select(p => Point.FromJson(p, tags));
+                pointsList = replacementPoints.Select(p => Point.FromDataContract(p, tags));
             }
             catch(PointValidationException ex)
             {
@@ -92,12 +93,12 @@ namespace hutel.Controllers
                 points.Add(p.Id, p);
             }
             WriteStorage(points, tags);
-            return Json(points.Values.Select(p => p.ToJson(tags)).ToList());
+            return Json(points.Values.Select(p => p.ToDataContract(tags)).ToList());
         }
 
         [HttpPost("/api/points")]
         [ValidateModelState]
-        public IActionResult PostOne([FromBody]PointJson pointJson)
+        public IActionResult PostOnePoint([FromBody]PointDataContract input)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
@@ -105,7 +106,7 @@ namespace hutel.Controllers
             Point point;
             try
             {
-                point = Point.FromJson(pointJson, id, tags);
+                point = Point.FromDataContract(input, id, tags);
             }
             catch(PointValidationException ex)
             {
@@ -113,12 +114,12 @@ namespace hutel.Controllers
             }
             points[id] = point;
             WriteStorage(points, tags);
-            return Json(point.ToJson(tags));
+            return Json(point.ToDataContract(tags));
         }
 
         [HttpPut("/api/point/{id}")]
         [ValidateModelState]
-        public IActionResult PutOne(Guid id, [FromBody]PointJson pointJson)
+        public IActionResult PutOnePoint(Guid id, [FromBody]PointDataContract input)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
@@ -130,7 +131,7 @@ namespace hutel.Controllers
             Point point;
             try
             {
-                point = Point.FromJson(pointJson, id, tags);
+                point = Point.FromDataContract(input, id, tags);
             }
             catch(PointValidationException ex)
             {
@@ -143,7 +144,58 @@ namespace hutel.Controllers
             }
             points[id] = point;
             WriteStorage(points, tags);
-            return Json(point.ToJson(tags));
+            return Json(point.ToDataContract(tags));
+        }
+
+        [HttpGet("/api/tags")]
+        public IActionResult GetAllTags()
+        {
+            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
+            return Json(tagsDataContract);
+        }
+
+        [HttpPut("/api/tags")]
+        [ValidateModelState]
+        public IActionResult PutAllTags([FromBody]List<Tag> replacementTagsList)
+        {
+            if (!replacementTagsList.Any())
+            {
+                return new BadRequestObjectResult(
+                    new InvalidOperationException("Tags list is empty"));
+            }
+            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
+            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var duplicateTags = replacementTagsList
+                .Select(tag => tag.Id)
+                .GroupBy(id => id)
+                .Where(g => g.Count() > 1);
+            if (duplicateTags.Any())
+            {
+                return new BadRequestObjectResult(
+                    new InvalidOperationException(
+                        $"Duplicate tag ids: {string.Join(", ", duplicateTags)}").ToString());
+            }
+            var pointsDataContract = points.Values.Select(point => point.ToDataContract(tags));
+            var replacementTags = replacementTagsList.ToDictionary(tag => tag.Id, tag => tag);
+            try
+            {
+                foreach (var pointDataContract in pointsDataContract)
+                {
+                    Point.FromDataContract(pointDataContract, replacementTags);
+                }
+            }
+            catch(PointValidationException ex)
+            {
+                return new BadRequestObjectResult(ex.ToString());
+            }
+            tags.Clear();
+            foreach (var tag in replacementTagsList)
+            {
+                tags.Add(tag.Id, tag);
+            }
+            WriteTags(tags);
+            return Json(tags.Values);
         }
 
         private static Dictionary<Guid, Point> ReadStorage(Dictionary<string, Tag> tags)
@@ -151,19 +203,19 @@ namespace hutel.Controllers
             if (System.IO.File.Exists(_storagePath))
             {
                 var pointsString = System.IO.File.ReadAllText(_storagePath);
-                var pointsList = JsonConvert.DeserializeObject<PointsStorageJson>(pointsString);
-                var duplicatePoints = pointsList
-                    .Select(point => point.Id)
-                    .GroupBy(id => id)
+                var pointsDataContractList =
+                    JsonConvert.DeserializeObject<PointsStorageDataContract>(pointsString);
+                var duplicatePoints = pointsDataContractList
+                    .GroupBy(point => point.Id)
                     .Where(g => g.Count() > 1);
                 if (duplicatePoints.Any())
                 {
                     throw new InvalidOperationException(
                         $"Duplicate point ids in config: {string.Join(", ", duplicatePoints)}");
                 }
-                return pointsList.ToDictionary(
-                    pointWithIdJson => pointWithIdJson.Id,
-                    pointWithIdJson => Point.FromJson(pointWithIdJson, tags));
+                return pointsDataContractList.ToDictionary(
+                    point => point.Id,
+                    point => Point.FromDataContract(point, tags));
             }
             else
             {
@@ -184,7 +236,7 @@ namespace hutel.Controllers
                 System.IO.File.Copy(_storagePath, _storageBackupPath);
             }
             var pointsJson = JsonConvert.SerializeObject(
-                points.Values.Select(p => p.ToJson(tags)).ToList(),
+                points.Values.Select(p => p.ToDataContract(tags)).ToList(),
                 Formatting.Indented);
             System.IO.File.WriteAllText(_storagePath, pointsJson);
         }
@@ -196,17 +248,38 @@ namespace hutel.Controllers
                 throw new System.IO.FileNotFoundException("Tags config doesn't exist");
             }
             var tagsString = System.IO.File.ReadAllText(_tagsPath);
-            var tagsList = JsonConvert.DeserializeObject<List<Tag>>(tagsString);
-            var duplicateTags = tagsList
-                .Select(tag => tag.Id)
-                .GroupBy(id => id)
+            var tagsDataContractList =
+                JsonConvert.DeserializeObject<List<TagDataContract>>(tagsString);
+            if (!tagsDataContractList.Any())
+            {
+                throw new InvalidOperationException("Tags list is empty");
+            }
+            var duplicateTags = tagsDataContractList
+                .GroupBy(tag => tag.Id)
                 .Where(g => g.Count() > 1);
             if (duplicateTags.Any())
             {
                 throw new InvalidOperationException(
                     $"Duplicate tag ids in config: {string.Join(", ", duplicateTags)}");
             }
-            return tagsList.ToDictionary(tag => tag.Id, tag => tag);
+            return tagsDataContractList.ToDictionary(
+                tag => tag.Id,
+                tag => Tag.FromDataContract(tag));
+        }
+
+        private static void WriteTags(Dictionary<string, Tag> tags)
+        {
+            if (System.IO.File.Exists(_tagsBackupPath))
+            {
+                System.IO.File.Delete(_tagsBackupPath);
+            }
+            if (System.IO.File.Exists(_tagsPath))
+            {
+                System.IO.File.Copy(_tagsPath, _tagsBackupPath);
+            }
+            var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
+            var tagsJson = JsonConvert.SerializeObject(tagsDataContract, Formatting.Indented);
+            System.IO.File.WriteAllText(_tagsPath, tagsJson);
         }
     }
 }

@@ -57,3 +57,5 @@ Examples of the points (rename `tags.json.example` to `tags.json` for successful
 * GET `/api/points?startDate=yyyy-mm-dd` returns all points that were added on or after specified date
 * PUT `/api/points` overwrites the entire storage, the body format is the same as result of the previous method; all points are validated against tags, if any single one doesn't pass validation, storage is not modified
 * PUT `/api/point/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` overwrites the point with specified id; the new point must include the same tag id as the old one
+* GET `/api/tags` returns the entire tags config contents
+* PUT `/api/tags` overwrites the entire tags config, the body format is the same as result of the previous method; all existing points are validated against the new tags, if any given one doesn't pass validation, tags config is not modified
