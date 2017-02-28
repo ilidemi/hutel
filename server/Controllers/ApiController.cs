@@ -18,6 +18,7 @@ namespace hutel.Controllers
         private readonly ILogger _logger;
         private readonly IStorageClient _storageClient;
         private const string _bucket = "hutel-storage";
+        private const string _envUseGoogleStorage = "HUTEL_USE_GOOGLE_STORAGE";
         private const string _pointsKey = "points";
         private const string _tagsKey = "tags";
         private const string _storagePath = "storage.json";
@@ -27,7 +28,14 @@ namespace hutel.Controllers
 
         public ApiController(IMemoryCache memoryCache, ILogger<ApiController> logger)
         {
-            _storageClient = new GoogleCloudStorageClient(_bucket);
+            if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) != null)
+            {
+                _storageClient = new GoogleCloudStorageClient(_bucket);
+            }
+            else
+            {
+                _storageClient = new LocalStorageClient();
+            }
             _memoryCache = memoryCache;
             Dictionary<string, Tag> tags;
             if (!memoryCache.TryGetValue(_tagsKey, out tags))
