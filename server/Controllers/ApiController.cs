@@ -207,8 +207,9 @@ namespace hutel.Controllers
             if (await _storageClient.ExistsAsync(_storagePath))
             {
                 var pointsString = await _storageClient.ReadAllAsync(_storagePath);
-                var pointsDataContractList =
-                    JsonConvert.DeserializeObject<PointsStorageDataContract>(pointsString);
+                var pointsDataContractList = pointsString == string.Empty
+                    ? new PointsStorageDataContract()
+                    : JsonConvert.DeserializeObject<PointsStorageDataContract>(pointsString);
                 var duplicatePoints = pointsDataContractList
                     .GroupBy(point => point.Id)
                     .Where(g => g.Count() > 1);
