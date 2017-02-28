@@ -1,32 +1,51 @@
 using System.IO;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace hutel.Logic
 {
     public class LocalStorageClient: IStorageClient
     {
-        public string ReadAll(string path)
+        public async Task<string> ReadAllAsync(string path)
         {
-            return File.ReadAllText(path);
+            using (var stream = File.OpenText(path))
+            {
+                var result = await stream.ReadToEndAsync();
+                return result;
+            }
         }
 
-        public void WriteAll(string path, string contents)
+        public async Task WriteAllAsync(string path, string contents)
         {
-            File.WriteAllText(path, contents);
+            using (var stream = File.Create(path))
+            {
+                using (var writer = new StreamWriter(stream))
+                {
+                    await writer.WriteAsync(contents);
+                }
+            }
         }
 
-        public bool Exists(string path)
+        public Task<bool> ExistsAsync(string path)
         {
-            return File.Exists(path);
+            return Task.FromResult(File.Exists(path));
         }
 
-        public void Copy(string source, string dest)
+        public async Task CopyAsync(string source, string dest)
         {
-            File.Copy(source, dest);
+            using (var sourceStream = File.Open(source, FileMode.Open))
+            {
+                using (var destStream = File.Create(dest))
+                {
+                    await sourceStream.CopyToAsync(destStream);
+                }
+            }
         }
 
-        public void Delete(string path)
+        public Task DeleteAsync(string path)
         {
-            File.Delete(path);
+           File.Delete(path);
+           return Task.Delay(0);
         }
     }
 }

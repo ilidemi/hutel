@@ -1,15 +1,17 @@
+using System.Threading.Tasks;
+
 namespace hutel.Logic
 {
     public interface IStorageClient
     {
-        string ReadAll(string path);
+        Task<string> ReadAllAsync(string path);
 
-        void WriteAll(string path, string contents);
+        Task WriteAllAsync(string path, string contents);
 
-        bool Exists(string path);
+        Task<bool> ExistsAsync(string path);
 
-        void Copy(string source, string dest);
+        Task CopyAsync(string source, string dest);
 
-        void Delete(string path);
+        Task DeleteAsync(string path);
     }
 }
