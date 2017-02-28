@@ -10,12 +10,11 @@ namespace hutel.Logic
 {
     public class GoogleCloudStorageClient: IStorageClient
     {
-        private string _bucket;
+        private const string _bucket = "hutel-storage";
         private StorageClient _googleStorageClient;
 
-        public GoogleCloudStorageClient(string bucket)
+        public GoogleCloudStorageClient()
         {
-            _bucket = bucket;
             _googleStorageClient = StorageClient.Create();
         }
 
@@ -45,6 +44,7 @@ namespace hutel.Logic
             try
             {
                 await _googleStorageClient.GetObjectAsync(_bucket, path);
+                return true;
             }
             catch (GoogleApiException ex)
             {
@@ -54,7 +54,6 @@ namespace hutel.Logic
                 }
                 throw;
             }
-            return true;
         }
 
         public async Task CopyAsync(string source, string dest)

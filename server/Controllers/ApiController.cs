@@ -17,7 +17,6 @@ namespace hutel.Controllers
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger _logger;
         private readonly IStorageClient _storageClient;
-        private const string _bucket = "hutel-storage";
         private const string _envUseGoogleStorage = "HUTEL_USE_GOOGLE_STORAGE";
         private const string _pointsKey = "points";
         private const string _tagsKey = "tags";
@@ -30,7 +29,7 @@ namespace hutel.Controllers
         {
             if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) != null)
             {
-                _storageClient = new GoogleCloudStorageClient(_bucket);
+                _storageClient = new GoogleCloudStorageClient();
             }
             else
             {
