@@ -15,6 +15,7 @@ namespace hutel.Controllers
     {
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger _logger;
+        private readonly IStorageClient _storageClient;
         private const string _pointsKey = "points";
         private const string _tagsKey = "tags";
         private const string _storagePath = "storage.json";
@@ -48,6 +49,7 @@ namespace hutel.Controllers
                 );
             }
             _logger = logger;
+            _storageClient = new LocalStorageClient();
         }
 
         [HttpGet("/api/points")]
@@ -198,11 +200,11 @@ namespace hutel.Controllers
             return Json(tags.Values);
         }
 
-        private static Dictionary<Guid, Point> ReadStorage(Dictionary<string, Tag> tags)
+        private Dictionary<Guid, Point> ReadStorage(Dictionary<string, Tag> tags)
         {
-            if (System.IO.File.Exists(_storagePath))
+            if (_storageClient.Exists(_storagePath))
             {
-                var pointsString = System.IO.File.ReadAllText(_storagePath);
+                var pointsString = _storageClient.ReadAll(_storagePath);
                 var pointsDataContractList =
                     JsonConvert.DeserializeObject<PointsStorageDataContract>(pointsString);
                 var duplicatePoints = pointsDataContractList
@@ -223,31 +225,31 @@ namespace hutel.Controllers
             }
         }
 
-        private static void WriteStorage(
+        private void WriteStorage(
             Dictionary<Guid, Point> points,
             Dictionary<string, Tag> tags)
         {
-            if (System.IO.File.Exists(_storageBackupPath))
+            if (_storageClient.Exists(_storageBackupPath))
             {
-                System.IO.File.Delete(_storageBackupPath);
+                _storageClient.Delete(_storageBackupPath);
             }
-            if (System.IO.File.Exists(_storagePath))
+            if (_storageClient.Exists(_storagePath))
             {
-                System.IO.File.Copy(_storagePath, _storageBackupPath);
+                _storageClient.Copy(_storagePath, _storageBackupPath);
             }
             var pointsJson = JsonConvert.SerializeObject(
                 points.Values.Select(p => p.ToDataContract(tags)).ToList(),
                 Formatting.Indented);
-            System.IO.File.WriteAllText(_storagePath, pointsJson);
+            _storageClient.WriteAll(_storagePath, pointsJson);
         }
 
-        private static Dictionary<string, Tag> ReadTags()
+        private Dictionary<string, Tag> ReadTags()
         {
-            if (!System.IO.File.Exists(_tagsPath))
+            if (!_storageClient.Exists(_tagsPath))
             {
-                throw new System.IO.FileNotFoundException("Tags config doesn't exist");
+                throw new InvalidOperationException("Tags config doesn't exist");
             }
-            var tagsString = System.IO.File.ReadAllText(_tagsPath);
+            var tagsString = _storageClient.ReadAll(_tagsPath);
             var tagsDataContractList =
                 JsonConvert.DeserializeObject<List<TagDataContract>>(tagsString);
             if (!tagsDataContractList.Any())
@@ -267,19 +269,19 @@ namespace hutel.Controllers
                 tag => Tag.FromDataContract(tag));
         }
 
-        private static void WriteTags(Dictionary<string, Tag> tags)
+        private void WriteTags(Dictionary<string, Tag> tags)
         {
-            if (System.IO.File.Exists(_tagsBackupPath))
+            if (_storageClient.Exists(_tagsBackupPath))
             {
-                System.IO.File.Delete(_tagsBackupPath);
+                _storageClient.Delete(_tagsBackupPath);
             }
-            if (System.IO.File.Exists(_tagsPath))
+            if (_storageClient.Exists(_tagsPath))
             {
-                System.IO.File.Copy(_tagsPath, _tagsBackupPath);
+                _storageClient.Copy(_tagsPath, _tagsBackupPath);
             }
             var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
             var tagsJson = JsonConvert.SerializeObject(tagsDataContract, Formatting.Indented);
-            System.IO.File.WriteAllText(_tagsPath, tagsJson);
+            _storageClient.WriteAll(_tagsPath, tagsJson);
         }
     }
 }
