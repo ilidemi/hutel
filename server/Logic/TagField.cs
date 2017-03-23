@@ -102,6 +102,11 @@ namespace hutel.Logic
 
         public override Object ValueFromDataContract(Object obj)
         {
+            var intObj = obj as Int64?;
+            if (intObj != null)
+            {
+                return (Double)intObj;
+            }
             TypeValidationHelper.Validate(obj, typeof(Double));
             return obj;
         }

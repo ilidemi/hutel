@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using hutel.Filters;
 using hutel.Logic;
 using hutel.Models;
@@ -15,6 +16,8 @@ namespace hutel.Controllers
     {
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger _logger;
+        private readonly IStorageClient _storageClient;
+        private const string _envUseGoogleStorage = "HUTEL_USE_GOOGLE_STORAGE";
         private const string _pointsKey = "points";
         private const string _tagsKey = "tags";
         private const string _storagePath = "storage.json";
@@ -24,11 +27,19 @@ namespace hutel.Controllers
 
         public ApiController(IMemoryCache memoryCache, ILogger<ApiController> logger)
         {
+            if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) != null)
+            {
+                _storageClient = new GoogleCloudStorageClient();
+            }
+            else
+            {
+                _storageClient = new LocalStorageClient();
+            }
             _memoryCache = memoryCache;
             Dictionary<string, Tag> tags;
             if (!memoryCache.TryGetValue(_tagsKey, out tags))
             {
-                tags = ReadTags();
+                tags = ReadTags().Result;
                 _memoryCache.Set(
                     _tagsKey,
                     tags,
@@ -39,7 +50,7 @@ namespace hutel.Controllers
             Dictionary<Guid, Point> points;
             if (!_memoryCache.TryGetValue(_pointsKey, out points))
             {
-                points = ReadStorage(tags);
+                points = ReadStorage(tags).Result;
                 _memoryCache.Set(
                     _pointsKey,
                     points,
@@ -64,7 +75,7 @@ namespace hutel.Controllers
 
         [HttpPut("/api/points")]
         [ValidateModelState]
-        public IActionResult PutAllPoints([FromBody]PointsStorageDataContract replacementPoints)
+        public async Task<IActionResult> PutAllPoints([FromBody]PointsStorageDataContract replacementPoints)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
@@ -92,13 +103,13 @@ namespace hutel.Controllers
             {
                 points.Add(p.Id, p);
             }
-            WriteStorage(points, tags);
+            await WriteStorage(points, tags);
             return Json(points.Values.Select(p => p.ToDataContract(tags)).ToList());
         }
 
         [HttpPost("/api/points")]
         [ValidateModelState]
-        public IActionResult PostOnePoint([FromBody]PointDataContract input)
+        public async Task<IActionResult> PostOnePoint([FromBody]PointDataContract input)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
@@ -113,13 +124,13 @@ namespace hutel.Controllers
                 return new BadRequestObjectResult(ex.ToString());
             }
             points[id] = point;
-            WriteStorage(points, tags);
+            await WriteStorage(points, tags);
             return Json(point.ToDataContract(tags));
         }
 
         [HttpPut("/api/point/{id}")]
         [ValidateModelState]
-        public IActionResult PutOnePoint(Guid id, [FromBody]PointDataContract input)
+        public async Task<IActionResult> PutOnePoint(Guid id, [FromBody]PointDataContract input)
         {
             var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
             var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
@@ -143,7 +154,7 @@ namespace hutel.Controllers
                         $"Tag id differs from the known one. Expected: {points[id].TagId}, got: {point.TagId}").ToString());
             }
             points[id] = point;
-            WriteStorage(points, tags);
+            await WriteStorage(points, tags);
             return Json(point.ToDataContract(tags));
         }
 
@@ -157,7 +168,7 @@ namespace hutel.Controllers
 
         [HttpPut("/api/tags")]
         [ValidateModelState]
-        public IActionResult PutAllTags([FromBody]List<Tag> replacementTagsList)
+        public async Task<IActionResult> PutAllTags([FromBody]List<Tag> replacementTagsList)
         {
             if (!replacementTagsList.Any())
             {
@@ -194,17 +205,18 @@ namespace hutel.Controllers
             {
                 tags.Add(tag.Id, tag);
             }
-            WriteTags(tags);
+            await WriteTags(tags);
             return Json(tags.Values);
         }
 
-        private static Dictionary<Guid, Point> ReadStorage(Dictionary<string, Tag> tags)
+        private async Task<Dictionary<Guid, Point>> ReadStorage(Dictionary<string, Tag> tags)
         {
-            if (System.IO.File.Exists(_storagePath))
+            if (await _storageClient.ExistsAsync(_storagePath))
             {
-                var pointsString = System.IO.File.ReadAllText(_storagePath);
-                var pointsDataContractList =
-                    JsonConvert.DeserializeObject<PointsStorageDataContract>(pointsString);
+                var pointsString = await _storageClient.ReadAllAsync(_storagePath);
+                var pointsDataContractList = pointsString == string.Empty
+                    ? new PointsStorageDataContract()
+                    : JsonConvert.DeserializeObject<PointsStorageDataContract>(pointsString);
                 var duplicatePoints = pointsDataContractList
                     .GroupBy(point => point.Id)
                     .Where(g => g.Count() > 1);
@@ -223,31 +235,31 @@ namespace hutel.Controllers
             }
         }
 
-        private static void WriteStorage(
+        private async Task WriteStorage(
             Dictionary<Guid, Point> points,
             Dictionary<string, Tag> tags)
         {
-            if (System.IO.File.Exists(_storageBackupPath))
+            if (await _storageClient.ExistsAsync(_storageBackupPath))
             {
-                System.IO.File.Delete(_storageBackupPath);
+                await _storageClient.DeleteAsync(_storageBackupPath);
             }
-            if (System.IO.File.Exists(_storagePath))
+            if (await _storageClient.ExistsAsync(_storagePath))
             {
-                System.IO.File.Copy(_storagePath, _storageBackupPath);
+                await _storageClient.CopyAsync(_storagePath, _storageBackupPath);
             }
             var pointsJson = JsonConvert.SerializeObject(
                 points.Values.Select(p => p.ToDataContract(tags)).ToList(),
                 Formatting.Indented);
-            System.IO.File.WriteAllText(_storagePath, pointsJson);
+            await _storageClient.WriteAllAsync(_storagePath, pointsJson);
         }
 
-        private static Dictionary<string, Tag> ReadTags()
+        private async Task<Dictionary<string, Tag>> ReadTags()
         {
-            if (!System.IO.File.Exists(_tagsPath))
+            if (!await _storageClient.ExistsAsync(_tagsPath))
             {
-                throw new System.IO.FileNotFoundException("Tags config doesn't exist");
+                throw new InvalidOperationException("Tags config doesn't exist");
             }
-            var tagsString = System.IO.File.ReadAllText(_tagsPath);
+            var tagsString = await _storageClient.ReadAllAsync(_tagsPath);
             var tagsDataContractList =
                 JsonConvert.DeserializeObject<List<TagDataContract>>(tagsString);
             if (!tagsDataContractList.Any())
@@ -267,19 +279,19 @@ namespace hutel.Controllers
                 tag => Tag.FromDataContract(tag));
         }
 
-        private static void WriteTags(Dictionary<string, Tag> tags)
+        private async Task WriteTags(Dictionary<string, Tag> tags)
         {
-            if (System.IO.File.Exists(_tagsBackupPath))
+            if (await _storageClient.ExistsAsync(_tagsBackupPath))
             {
-                System.IO.File.Delete(_tagsBackupPath);
+                await _storageClient.DeleteAsync(_tagsBackupPath);
             }
-            if (System.IO.File.Exists(_tagsPath))
+            if (await _storageClient.ExistsAsync(_tagsPath))
             {
-                System.IO.File.Copy(_tagsPath, _tagsBackupPath);
+                await _storageClient.CopyAsync(_tagsPath, _tagsBackupPath);
             }
             var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
             var tagsJson = JsonConvert.SerializeObject(tagsDataContract, Formatting.Indented);
-            System.IO.File.WriteAllText(_tagsPath, tagsJson);
+            await _storageClient.WriteAllAsync(_tagsPath, tagsJson);
         }
     }
 }
