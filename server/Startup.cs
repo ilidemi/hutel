@@ -37,12 +37,6 @@ namespace server
             }
             app.UseMvc();
             app.UseStaticFiles();
-            app.UseStaticFiles(new StaticFileOptions()
-            {
-                FileProvider = new PhysicalFileProvider(
-                    Path.Combine(Directory.GetCurrentDirectory(), "ViewModels")),
-                RequestPath = new PathString("/js")
-            });
         }
     }
 }
