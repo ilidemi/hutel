@@ -274,3 +274,6 @@ storage.json.bak
 # Tags config
 tags.json
 tags.json.bak
+
+# Webpack bundle
+wwwroot/dist
