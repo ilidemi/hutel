@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using hutel.Filters;
 using hutel.Middleware;
@@ -13,6 +14,8 @@ namespace server
 {
     public class Startup
     {
+        private const string _envUseBasicAuth = "HUTEL_USE_BASIC_AUTH";
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -35,6 +38,10 @@ namespace server
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+            }
+            if (Environment.GetEnvironmentVariable(_envUseBasicAuth) == "1")
+            {
+                app.UseBasicAuthMiddleware();
             }
             app.UseRedirectToHttpsMiddleware();
             app.UseMvc();

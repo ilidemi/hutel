@@ -27,7 +27,7 @@ namespace hutel.Controllers
 
         public ApiController(IMemoryCache memoryCache, ILogger<ApiController> logger)
         {
-            if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) != null)
+            if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) == "1")
             {
                 _storageClient = new GoogleCloudStorageClient();
             }
