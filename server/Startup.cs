@@ -39,11 +39,11 @@ namespace server
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseRedirectToHttpsMiddleware();
             if (Environment.GetEnvironmentVariable(_envUseBasicAuth) == "1")
             {
                 app.UseBasicAuthMiddleware();
             }
-            app.UseRedirectToHttpsMiddleware();
             app.UseMvc();
             app.UseStaticFiles();
         }
