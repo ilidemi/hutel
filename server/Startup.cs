@@ -1,5 +1,6 @@
 using System.IO;
 using hutel.Filters;
+using hutel.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -35,6 +36,7 @@ namespace server
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseRedirectToHttpsMiddleware();
             app.UseMvc();
             app.UseStaticFiles();
         }
