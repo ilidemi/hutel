@@ -23,9 +23,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.0.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="1.0.2" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="1.0.0-beta07" />
-    <Content Include="app.yaml" >
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <Target Name="RunWebpackDev" AfterTargets="Build">
     <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
