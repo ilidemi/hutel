@@ -36,7 +36,10 @@ class PointHistory extends React.Component {
     };
     const dateStyle = {
       color: this.props.theme.historyDateText
-    }
+    };
+    const listItemStyle = {
+      fontWeight: 500
+    };
     var pointsByDate = this.props.points.reduce((acc, point) => {
       (acc[point.date] = acc[point.date] || []).push(point);
       return acc;
@@ -53,6 +56,7 @@ class PointHistory extends React.Component {
               primaryText={point.tagId.toUpperCase()}
               secondaryText={secondaryText}
               disabled={true}
+              style={listItemStyle}
             />
           );
         });
