@@ -24,21 +24,6 @@ class TimeInput extends React.Component {
   }
 
   render() {
-    const floatingLabelStyle = {
-      color: this.props.theme.topTextFieldHint
-    }
-    const floatingLabelFocusStyle = {
-      color: this.props.theme.topTextFieldHintFocus
-    }
-    const underlineStyle = {
-      borderColor: this.props.theme.topTextFieldHint
-    }
-    const underlineFocusStyle = {
-      borderColor: this.props.theme.topTextFieldHintFocus
-    }
-    const inputStyle = {
-      color: this.props.theme.topTextFieldInput
-    }
     return (
       <div>
         <TimePicker
@@ -47,11 +32,6 @@ class TimeInput extends React.Component {
           floatingLabelFixed={true}
           value={this.state.value}
           onChange={this.onChange.bind(this)}
-          inputStyle={inputStyle}
-          floatingLabelStyle={floatingLabelStyle}
-          floatingLabelFocusStyle={floatingLabelFocusStyle}
-          underlineStyle={underlineStyle}
-          underlineFocusStyle={underlineFocusStyle}
         />
       </div>
     );

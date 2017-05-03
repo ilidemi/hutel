@@ -28,9 +28,8 @@ class SelectTag extends React.Component {
       <RaisedButton
         onClick={this.selectTag.bind(this, tag.id)}
         label={tag.id}
-        labelColor={this.props.theme.topButtonText}
         labelStyle={labelStyle}
-        backgroundColor={this.props.theme.topButtonPrimary}
+        primary={true}
         style={buttonStyle}
         icon={
           <FontIcon

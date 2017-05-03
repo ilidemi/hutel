@@ -48,24 +48,6 @@ class DateInput extends React.Component {
     const buttonStyle = {
       minWidth: 36
     }
-    const buttonIconStyle = {
-      color: this.props.theme.topText
-    }
-    const floatingLabelStyle = {
-      color: this.props.theme.topTextFieldHint
-    }
-    const floatingLabelFocusStyle = {
-      color: this.props.theme.topTextFieldHintFocus
-    }
-    const underlineStyle = {
-      borderColor: this.props.theme.topTextFieldHint
-    }
-    const underlineFocusStyle = {
-      borderColor: this.props.theme.topTextFieldHintFocus
-    }
-    const inputStyle = {
-      color: this.props.theme.topTextFieldInput
-    }
     return (
       <div style={style}>
         <DatePicker
@@ -73,16 +55,10 @@ class DateInput extends React.Component {
           value={this.state.value}
           floatingLabelText={this.props.field.name}
           floatingLabelFixed={true}
-          inputStyle={inputStyle}
-          floatingLabelStyle={floatingLabelStyle}
-          floatingLabelFocusStyle={floatingLabelFocusStyle}
-          underlineStyle={underlineStyle}
-          underlineFocusStyle={underlineFocusStyle}
           onChange={this.onChange.bind(this)}
         />
         <IconButton
           iconClassName="material-icons"
-          iconStyle={buttonIconStyle}
           style={buttonStyle}
           onClick={this.increment.bind(this)}
         >
@@ -90,7 +66,6 @@ class DateInput extends React.Component {
         </IconButton>
         <IconButton
           iconClassName="material-icons"
-          iconStyle={buttonIconStyle}
           style={buttonStyle}
           onClick={this.decrement.bind(this)}
         >

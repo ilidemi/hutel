@@ -100,20 +100,15 @@ class App extends React.Component {
 
   render() {
     const theme = {
-      headerBackground: Colors.indigo500,
+      headerBackground: Colors.deepPurple900,
       headerText: Colors.fullWhite,
-      topBackground: Colors.grey100,
-      topButtonPrimary: Colors.redA700,
-      topButtonText: Colors.darkWhite,
-      topTextFieldHint: Colors.redA200,
-      topTextFieldHintFocus: Colors.redA400,
-      topTextFieldInput: Colors.darkBlack,
-      topText: Colors.redA700,
-      historyDateText: Colors.indigo500
+      topBackground: Colors.fullWhite,
+      historyBackground: Colors.grey100,
+      historyDateText: Colors.deepPurple900
     }
     const muiTheme = getMuiTheme({
       palette: {
-        primary1Color: Colors.redA700,
+        primary1Color: Colors.amber900,
         accent1Color: Colors.yellow500
       }
     });
@@ -122,7 +117,8 @@ class App extends React.Component {
       margin: "auto",
       display: "flex",
       flexDirection: "column",
-      flexHeight: "100%"
+      flexHeight: "100%",
+      flexMinHeight: "100%"
     };
     const headerStyle = {
       paddingLeft: 24,
@@ -132,6 +128,9 @@ class App extends React.Component {
     }
     var selectTagStyle = {
       background: theme.topBackground
+    }
+    var pointHistoryStyle = {
+      background: theme.historyBackground
     }
     var selectTag = <SelectTag
       tags={this.state.tags}
@@ -160,10 +159,12 @@ class App extends React.Component {
             {this.state.selectedTagId === null ? selectTag : pointInput}
           </div>
           <Divider />
-          <PointHistory
-            points={this.state.points}
-            theme={theme}
-          />
+          <div style={pointHistoryStyle}>
+            <PointHistory
+              points={this.state.points}
+              theme={theme}
+            />
+          </div>
         </Paper>
       </MuiThemeProvider>
     );

@@ -33,21 +33,6 @@ class StringInput extends React.Component {
   }
 
   render() {
-    const floatingLabelStyle = {
-      color: this.props.theme.topTextFieldHint
-    }
-    const floatingLabelFocusStyle = {
-      color: this.props.theme.topTextFieldHintFocus
-    }
-    const underlineStyle = {
-      borderColor: this.props.theme.topTextFieldHint
-    }
-    const underlineFocusStyle = {
-      borderColor: this.props.theme.topTextFieldHintFocus
-    }
-    const inputStyle = {
-      color: this.props.theme.topTextFieldInput
-    }
     return (
       <div>
         <TextField
@@ -58,11 +43,6 @@ class StringInput extends React.Component {
           errorText={this.state.validationMessage}
           onBlur={this.onBlur.bind(this)}
           onChange={this.onChange.bind(this)}
-          inputStyle={inputStyle}
-          floatingLabelStyle={floatingLabelStyle}
-          floatingLabelFocusStyle={floatingLabelFocusStyle}
-          underlineStyle={underlineStyle}
-          underlineFocusStyle={underlineFocusStyle}
         ></TextField>
       </div>
     );

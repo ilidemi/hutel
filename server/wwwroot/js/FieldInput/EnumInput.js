@@ -21,31 +21,17 @@ class EnumInput extends React.Component {
     var radioButtonStyle = {
       margin: 8,
     };
-    var radioButtonIconStyle = {
-      color: this.props.theme.topText
-    };
-    var radioButtonLabelStyle = {
-      color: this.props.theme.topText
-    };
-    var titleStyle = {
-      color: this.props.theme.topText
-    };
     var radioButtons = this.props.field.values.map(value => {
       return (
       <RadioButton
         label={value}
-        labelStyle={radioButtonLabelStyle}
-        iconStyle={radioButtonIconStyle}
         value={value}
         style={radioButtonStyle} />
       );
     });
     return (
       <div>
-        <p
-          className="mdc-typography--body1 mdc-typography--adjust-margin"
-          style={titleStyle}
-        >
+        <p className="mdc-typography--body1 mdc-typography--adjust-margin">
           {this.props.field.name}
         </p>
         <RadioButtonGroup

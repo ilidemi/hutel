@@ -103,25 +103,17 @@ class PointInput extends React.Component {
     };
     const titleStyle = {
       textTransform: "uppercase",
-      color: this.props.theme.topText
     };
     const buttonStyle = {
       margin: 8
-    };
-    const labelStyle = {
-      color: this.props.theme.topButtonPrimary
     };
     return (
       <div style={style}>
         <div>
           <FlatButton
             label="Back"
-            labelStyle={labelStyle}
             icon={
-              <FontIcon
-                className="material-icons"
-                style={labelStyle}
-              >
+              <FontIcon className="material-icons">
                 arrow_back
               </FontIcon>}
             style={buttonStyle}
