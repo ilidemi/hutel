@@ -18,12 +18,20 @@ class DateInput extends React.Component {
   }
   
   increment() {
-    var result = moment(this.state.value).add(1, 'days').toDate();
+    var current = moment(this.state.value);
+    if (!current.isValid()) {
+      current = moment();
+    }
+    var result = current.add(1, 'days').toDate();
     this.update(result);
   }
 
   decrement() {
-    var result = moment(this.state.value).subtract(1, 'days').toDate();
+    var current = moment(this.state.value);
+    if (!current.isValid()) {
+      current = moment();
+    }
+    var result = current.subtract(1, 'days').toDate();
     this.update(result);
   }
 
