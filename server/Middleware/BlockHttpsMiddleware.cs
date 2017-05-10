@@ -15,8 +15,13 @@ namespace hutel.Middleware
     
         public async Task Invoke(HttpContext httpContext)
         {
-            var protoHeader = httpContext.Request.Headers["X-Forwarded-Proto"].ToString();
-            if (protoHeader.ToLower() == "http")
+            var protoHeader = httpContext.Request.Headers["X-Forwarded-Proto"].ToString().ToLower();
+            httpContext.Items["protocol"] = httpContext.Request.IsHttps
+                ? "https"
+                : protoHeader == "https"
+                    ? "https"
+                    : "http";
+            if (protoHeader == "http")
             {
                 var request = httpContext.Request;
                 httpContext.Response.Redirect($"https://{request.Host}{request.Path}{request.QueryStri‌​ng}");
