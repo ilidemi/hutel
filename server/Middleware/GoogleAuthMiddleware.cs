@@ -3,12 +3,19 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Google.Cloud.Datastore.V1;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using hutel.Logic;
+using hutel.Session;
+using Google.Apis.Auth.OAuth2.Responses;
+using Google.Apis.Util.Store;
+using hutel.Storage;
 
 namespace hutel.Middleware
 {
@@ -25,6 +32,7 @@ namespace hutel.Middleware
         private readonly string _clientSecret;
         private readonly RequestDelegate _next;
         private readonly ISessionClient _sessionClient;
+        private readonly GoogleTokenClient _tokenClient;
     
         public GoogleAuthMiddleware(RequestDelegate next)
         {
@@ -32,6 +40,7 @@ namespace hutel.Middleware
             _clientId = Environment.GetEnvironmentVariable(_envGoogleClientId);
             _clientSecret = Environment.GetEnvironmentVariable(_envGoogleClientSecret);
             _sessionClient = new GoogleSessionClient();
+            _tokenClient = new GoogleTokenClient();
         }
     
         public async Task Invoke(HttpContext httpContext)
@@ -42,7 +51,7 @@ namespace hutel.Middleware
                 $"?client_id={_clientId}" +
                 $"&redirect_uri={redirectUri}" +
                 $"&response_type=code" +
-                $"&scope=https://www.googleapis.com/auth/userinfo.profile+https://www.googleapis.com/auth/drive" +
+                $"&scope=openid+profile+email+https://www.googleapis.com/auth/userinfo.profile+https://www.googleapis.com/auth/drive" +
                 $"&access_type=online";
 
             if (httpContext.Request.Path == "/login")
@@ -50,29 +59,27 @@ namespace hutel.Middleware
                 if (httpContext.Request.Query.ContainsKey("code"))
                 {
                     string authCode = httpContext.Request.Query["code"];
-                    var tokenEndpoint = _tokenEndpointBase + 
-                        $"?code={authCode}" + 
-                        $"&client_id={_clientId}" +
-                        $"&client_secret={_clientSecret}" + 
-                        $"&redirect_uri={redirectUri}" +
-                        $"&grant_type=authorization_code";
-                    var httpClient = new HttpClient();
-                    var tokenResponse = await httpClient.PostAsync(tokenEndpoint, new StringContent(""));
-                    var tokenBody = await tokenResponse.Content.ReadAsStringAsync();
-                    var tokenJObject = JObject.Parse(tokenBody);
-                    var accessToken = tokenJObject["access_token"]?.Value<string>();
-                    if (accessToken == null)
+                    var clientSecrets = new ClientSecrets
                     {
-                        httpContext.Response.Redirect(authEndpoint);
-                        return;
-                    }
+                        ClientId = _clientId,
+                        ClientSecret = _clientSecret
+                    };
+                    var flow = new GoogleAuthorizationCodeFlow(
+                        new GoogleAuthorizationCodeFlow.Initializer
+                        {
+                            ClientSecrets = clientSecrets
+                        }
+                    );
+                    var tokenResponse = await flow.ExchangeCodeForTokenAsync(
+                        "", authCode, redirectUri, CancellationToken.None);
                     var handler = new JwtSecurityTokenHandler();
-                    var idToken = handler.ReadJwtToken(tokenJObject["id_token"].Value<string>());
-
-                    var newSession = new Session
+                    var idToken = handler.ReadJwtToken(tokenResponse.IdToken);
+                    var userId = idToken.Subject;
+                    await _tokenClient.StoreAsync(userId, tokenResponse);
+                    var newSession = new SessionInfo
                     {
                         SessionId = Guid.NewGuid().ToString(),
-                        UserId = idToken.Subject,
+                        UserId = userId,
                         Expiration = DateTime.Now + _expirationTime
                     };
                     await _sessionClient.SaveSessionAsync(newSession);
@@ -103,6 +110,7 @@ namespace hutel.Middleware
                 httpContext.Response.Redirect(authEndpoint + $"&login_hint={session.UserId}");
                 return;
             }
+            httpContext.Items["UserId"] = session.UserId;
             await _next.Invoke(httpContext);
         }
     }

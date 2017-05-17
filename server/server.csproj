@@ -25,7 +25,9 @@
     <PackageReference Include="Google.Cloud.Storage.V1" Version="1.0.0-beta07"/>
     <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.25.0.844"/>
     <PackageReference Include="Google.Cloud.Datastore.V1" Version="1.0.0"/>
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.0.0"/>
+    <PackageReference Include="Google.Apis.Authentication" Version="1.6.0-beta"/>
+    <PackageReference Include="Google.Apis.Drive.v2" Version="1.25.0.858"/>
   </ItemGroup>
   <Target Name="RunWebpackDev" AfterTargets="Build">
     <Exec Command="npm install"/>

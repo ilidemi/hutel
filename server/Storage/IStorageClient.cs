@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace hutel.Logic
+namespace hutel.Storage
 {
     public interface IStorageClient
     {

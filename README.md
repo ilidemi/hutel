@@ -26,36 +26,36 @@ Examples of the points (rename `tags.json.example` to `tags.json` for successful
 
 ```JSON
 {
-    'tagId': 'pushups',
-    'date': '2016-12-11',
-    'sets': 5,
-    'total': 130
+    "tagId": "pushups",
+    "date": "2016-12-11",
+    "sets": 5,
+    "total": 130
 }
 ```
 
 ```JSON
 {
-    'tagId': 'enoughsleep',
-    'date': '2016-12-12',
-    'value': 'no'
+    "tagId": "enoughsleep",
+    "date": "2016-12-12",
+    "value": "no"
 }
 ```
 
 ```JSON
 {
-    'tagId': 'vacation',
-    'date': '2016-12-17',
-    'location': 'Mars',
-    'endDate': '2016-12-31'
+    "tagId": "vacation",
+    "date": "2016-12-17",
+    "location": "Mars",
+    "endDate": "2016-12-31"
 }
 ```
 
 ```JSON
 {
-    'tagId': 'run',
-    'date': '2017-01-01',
-    'km': 42.0,
-    'time': '02:34:11'
+    "tagId": "run",
+    "date": "2017-01-01",
+    "km": 42.0,
+    "time": "02:34:11"
 }
 ```
 

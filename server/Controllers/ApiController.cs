@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using hutel.Filters;
 using hutel.Logic;
 using hutel.Models;
+using hutel.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -16,8 +17,13 @@ namespace hutel.Controllers
     {
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger _logger;
-        private readonly IStorageClient _storageClient;
+        private readonly Lazy<IStorageClient> _storageClientLazy;
+        private IStorageClient _storageClient
+        {
+            get { return _storageClientLazy.Value; }
+        }
         private const string _envUseGoogleStorage = "HUTEL_USE_GOOGLE_STORAGE";
+        private const string _envUseGoogleDrive = "HUTEL_USE_GOOGLE_DRIVE";        
         private const string _pointsKey = "points";
         private const string _tagsKey = "tags";
         private const string _storagePath = "storage.json";
@@ -27,45 +33,31 @@ namespace hutel.Controllers
 
         public ApiController(IMemoryCache memoryCache, ILogger<ApiController> logger)
         {
-            if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) == "1")
+            if (Environment.GetEnvironmentVariable(_envUseGoogleDrive) == "1")
             {
-                _storageClient = new GoogleCloudStorageClient();
+                _storageClientLazy = new Lazy<IStorageClient>(() =>
+                {
+                    var userId = (string)HttpContext.Items["UserId"];
+                    return new GoogleDriveStorageClient(userId);
+                });
+            }
+            else if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) == "1")
+            {
+                _storageClientLazy = new Lazy<IStorageClient>(() => new GoogleCloudStorageClient());
             }
             else
             {
-                _storageClient = new LocalStorageClient();
-            }
-            _memoryCache = memoryCache;
-            Dictionary<string, Tag> tags;
-            if (!memoryCache.TryGetValue(_tagsKey, out tags))
-            {
-                tags = ReadTags().Result;
-                _memoryCache.Set(
-                    _tagsKey,
-                    tags,
-                    new MemoryCacheEntryOptions()
-                        .SetPriority(CacheItemPriority.NeverRemove)
-                );
-            }
-            Dictionary<Guid, Point> points;
-            if (!_memoryCache.TryGetValue(_pointsKey, out points))
-            {
-                points = ReadStorage(tags).Result;
-                _memoryCache.Set(
-                    _pointsKey,
-                    points,
-                    new MemoryCacheEntryOptions()
-                        .SetPriority(CacheItemPriority.NeverRemove)
-                );
+                _storageClientLazy = new Lazy<IStorageClient>(() => new LocalStorageClient());
             }
             _logger = logger;
+            _memoryCache = memoryCache;
         }
 
         [HttpGet("/api/points")]
-        public IActionResult GetAllPoints(string startDate)
+        public async Task<IActionResult> GetAllPoints(string startDate)
         {
-            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
+            var points = await ReadStorage(tags);
             var filteredPoints = points.Values
                     .Where(point => startDate == null || point.Date >= new HutelDate(startDate))
                     .ToList();
@@ -77,8 +69,8 @@ namespace hutel.Controllers
         [ValidateModelState]
         public async Task<IActionResult> PutAllPoints([FromBody]PointsStorageDataContract replacementPoints)
         {
-            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
+            var points = await ReadStorage(tags);
             IEnumerable<Point> pointsList;
             try
             {
@@ -111,8 +103,8 @@ namespace hutel.Controllers
         [ValidateModelState]
         public async Task<IActionResult> PostOnePoint([FromBody]PointDataContract input)
         {
-            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
+            var points = await ReadStorage(tags);
             var id = Guid.NewGuid();
             Point point;
             try
@@ -132,8 +124,8 @@ namespace hutel.Controllers
         [ValidateModelState]
         public async Task<IActionResult> PutOnePoint(Guid id, [FromBody]PointDataContract input)
         {
-            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
+            var points = await ReadStorage(tags);
             if (!points.ContainsKey(id))
             {
                 return new BadRequestObjectResult(
@@ -159,9 +151,9 @@ namespace hutel.Controllers
         }
 
         [HttpGet("/api/tags")]
-        public IActionResult GetAllTags()
+        public async Task<IActionResult> GetAllTags()
         {
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
             var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
             return Json(tagsDataContract);
         }
@@ -175,8 +167,8 @@ namespace hutel.Controllers
                 return new BadRequestObjectResult(
                     new InvalidOperationException("Tags list is empty"));
             }
-            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
+            var points = await ReadStorage(tags);
             var duplicateTags = replacementTagsList
                 .Select(tag => tag.Id)
                 .GroupBy(id => id)
@@ -211,6 +203,12 @@ namespace hutel.Controllers
 
         private async Task<Dictionary<Guid, Point>> ReadStorage(Dictionary<string, Tag> tags)
         {
+            Dictionary<Guid, Point> points;
+            if (_memoryCache.TryGetValue(_pointsKey, out points))
+            {
+                return points;
+            }
+
             if (await _storageClient.ExistsAsync(_storagePath))
             {
                 var pointsString = await _storageClient.ReadAllAsync(_storagePath);
@@ -225,14 +223,17 @@ namespace hutel.Controllers
                     throw new InvalidOperationException(
                         $"Duplicate point ids in config: {string.Join(", ", duplicatePoints)}");
                 }
-                return pointsDataContractList.ToDictionary(
+                points = pointsDataContractList.ToDictionary(
                     point => point.Id,
                     point => Point.FromDataContract(point, tags));
             }
             else
             {
-                return new Dictionary<Guid, Point>();
+                points = new Dictionary<Guid, Point>();
             }
+
+            _memoryCache.Set(_pointsKey, points);
+            return points;
         }
 
         private async Task WriteStorage(
@@ -251,10 +252,17 @@ namespace hutel.Controllers
                 points.Values.Select(p => p.ToDataContract(tags)).ToList(),
                 Formatting.Indented);
             await _storageClient.WriteAllAsync(_storagePath, pointsJson);
+            _memoryCache.Set(_pointsKey, points);
         }
 
         private async Task<Dictionary<string, Tag>> ReadTags()
         {
+            Dictionary<string, Tag> tags;
+            if (_memoryCache.TryGetValue(_tagsKey, out tags))
+            {
+                return tags;
+            }
+
             if (!await _storageClient.ExistsAsync(_tagsPath))
             {
                 throw new InvalidOperationException("Tags config doesn't exist");
@@ -274,9 +282,11 @@ namespace hutel.Controllers
                 throw new InvalidOperationException(
                     $"Duplicate tag ids in config: {string.Join(", ", duplicateTags)}");
             }
-            return tagsDataContractList.ToDictionary(
+            tags = tagsDataContractList.ToDictionary(
                 tag => tag.Id,
                 tag => Tag.FromDataContract(tag));
+            _memoryCache.Set(_tagsKey, tags);
+            return tags;
         }
 
         private async Task WriteTags(Dictionary<string, Tag> tags)
@@ -292,6 +302,7 @@ namespace hutel.Controllers
             var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
             var tagsJson = JsonConvert.SerializeObject(tagsDataContract, Formatting.Indented);
             await _storageClient.WriteAllAsync(_tagsPath, tagsJson);
+            _memoryCache.Set(_tagsKey, tags);
         }
     }
 }
