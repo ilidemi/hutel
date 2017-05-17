@@ -2,7 +2,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace hutel.Logic
+namespace hutel.Storage
 {
     public class LocalStorageClient: IStorageClient
     {

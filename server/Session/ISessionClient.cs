@@ -1,16 +1,16 @@
 using System;
 using System.Threading.Tasks;
 
-namespace hutel.Logic
+namespace hutel.Session
 {
     public interface ISessionClient
     {
-        Task<Session> LookupSessionAsync(string sessionId);
+        Task<SessionInfo> LookupSessionAsync(string sessionId);
 
-        Task SaveSessionAsync(Session session);
+        Task SaveSessionAsync(SessionInfo session);
     }
 
-    public class Session
+    public class SessionInfo
     {
         public string SessionId { get; set; }
         public string UserId { get; set; }

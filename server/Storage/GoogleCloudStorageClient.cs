@@ -6,7 +6,7 @@ using Google;
 using Google.Apis.Requests;
 using Google.Cloud.Storage.V1;
 
-namespace hutel.Logic
+namespace hutel.Storage
 {
     public class GoogleCloudStorageClient: IStorageClient
     {

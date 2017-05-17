@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using hutel.Filters;
 using hutel.Logic;
 using hutel.Models;
+using hutel.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -14,12 +15,14 @@ namespace hutel.Controllers
 {
     public class ApiController : Controller
     {
-        private readonly IMemoryCache _memoryCache;
         private readonly ILogger _logger;
-        private readonly IStorageClient _storageClient;
+        private readonly Lazy<IStorageClient> _storageClientLazy;
+        private IStorageClient _storageClient
+        {
+            get { return _storageClientLazy.Value; }
+        }
         private const string _envUseGoogleStorage = "HUTEL_USE_GOOGLE_STORAGE";
-        private const string _pointsKey = "points";
-        private const string _tagsKey = "tags";
+        private const string _envUseGoogleDrive = "HUTEL_USE_GOOGLE_DRIVE";
         private const string _storagePath = "storage.json";
         private const string _storageBackupPath = "storage.json.bak";
         private const string _tagsPath = "tags.json";
@@ -27,45 +30,30 @@ namespace hutel.Controllers
 
         public ApiController(IMemoryCache memoryCache, ILogger<ApiController> logger)
         {
-            if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) == "1")
+            if (Environment.GetEnvironmentVariable(_envUseGoogleDrive) == "1")
             {
-                _storageClient = new GoogleCloudStorageClient();
+                _storageClientLazy = new Lazy<IStorageClient>(() =>
+                {
+                    var userId = (string)HttpContext.Items["UserId"];
+                    return new GoogleDriveStorageClient(userId);
+                });
+            }
+            else if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) == "1")
+            {
+                _storageClientLazy = new Lazy<IStorageClient>(() => new GoogleCloudStorageClient());
             }
             else
             {
-                _storageClient = new LocalStorageClient();
-            }
-            _memoryCache = memoryCache;
-            Dictionary<string, Tag> tags;
-            if (!memoryCache.TryGetValue(_tagsKey, out tags))
-            {
-                tags = ReadTags().Result;
-                _memoryCache.Set(
-                    _tagsKey,
-                    tags,
-                    new MemoryCacheEntryOptions()
-                        .SetPriority(CacheItemPriority.NeverRemove)
-                );
-            }
-            Dictionary<Guid, Point> points;
-            if (!_memoryCache.TryGetValue(_pointsKey, out points))
-            {
-                points = ReadStorage(tags).Result;
-                _memoryCache.Set(
-                    _pointsKey,
-                    points,
-                    new MemoryCacheEntryOptions()
-                        .SetPriority(CacheItemPriority.NeverRemove)
-                );
+                _storageClientLazy = new Lazy<IStorageClient>(() => new LocalStorageClient());
             }
             _logger = logger;
         }
 
         [HttpGet("/api/points")]
-        public IActionResult GetAllPoints(string startDate)
+        public async Task<IActionResult> GetAllPoints(string startDate)
         {
-            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
+            var points = await ReadStorage(tags);
             var filteredPoints = points.Values
                     .Where(point => startDate == null || point.Date >= new HutelDate(startDate))
                     .ToList();
@@ -77,8 +65,8 @@ namespace hutel.Controllers
         [ValidateModelState]
         public async Task<IActionResult> PutAllPoints([FromBody]PointsStorageDataContract replacementPoints)
         {
-            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
+            var points = await ReadStorage(tags);
             IEnumerable<Point> pointsList;
             try
             {
@@ -111,8 +99,8 @@ namespace hutel.Controllers
         [ValidateModelState]
         public async Task<IActionResult> PostOnePoint([FromBody]PointDataContract input)
         {
-            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
+            var points = await ReadStorage(tags);
             var id = Guid.NewGuid();
             Point point;
             try
@@ -132,8 +120,8 @@ namespace hutel.Controllers
         [ValidateModelState]
         public async Task<IActionResult> PutOnePoint(Guid id, [FromBody]PointDataContract input)
         {
-            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
+            var points = await ReadStorage(tags);
             if (!points.ContainsKey(id))
             {
                 return new BadRequestObjectResult(
@@ -159,9 +147,9 @@ namespace hutel.Controllers
         }
 
         [HttpGet("/api/tags")]
-        public IActionResult GetAllTags()
+        public async Task<IActionResult> GetAllTags()
         {
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
             var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
             return Json(tagsDataContract);
         }
@@ -175,8 +163,8 @@ namespace hutel.Controllers
                 return new BadRequestObjectResult(
                     new InvalidOperationException("Tags list is empty"));
             }
-            var points = _memoryCache.Get<Dictionary<Guid, Point>>(_pointsKey);
-            var tags = _memoryCache.Get<Dictionary<string, Tag>>(_tagsKey);
+            var tags = await ReadTags();
+            var points = await ReadStorage(tags);
             var duplicateTags = replacementTagsList
                 .Select(tag => tag.Id)
                 .GroupBy(id => id)
