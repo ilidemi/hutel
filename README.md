@@ -69,12 +69,34 @@ Examples of the points (rename `tags.json.example` to `tags.json` for successful
 * GET `/api/tags` returns the entire tags config contents
 * PUT `/api/tags` overwrites the entire tags config, the body format is the same as result of the previous method; all existing points are validated against the new tags, if any given one doesn't pass validation, tags config is not modified
 
+## Authentication
+
+Basic authentication and Google authentication is supported.
+
+To use the basic authentication, set the environment variables (example for Windows):
+
+```Batchfile
+set HUTEL_USE_BASIC_AUTH=1
+set HUTEL_BASIC_AUTH_USERNAME=user
+set HUTEL_BASIC_AUTH_PASSWORD=P@ssw0rd
+```
+
+To use the Google authentication, set the environment variables (example for Windows):
+
+```Batchfile
+set HUTEL_USE_GOOGLE_AUTH=1
+set GOOGLE_PROJECT_ID=(your project id in Google Cloud)
+set GOOGLE_CLIENT_ID=(your client id)
+set GOOGLE_CLIENT_SECRET=(your client secret)
+```
+
 ## Storage
 
-Hutel supports two options for storing data:
+Hutel supports three options for storing data:
 
 * Local storage - tags.json and storage.json in current working directory act as underlying storage, used by default
 * Google Cloud Storage - data is stored in cloud blobs, used instead of the local storage if environment variable `HUTEL_USE_GOOGLE_STORAGE` is set
+* Google Drive Storage - data is stored in users' Google Drive storage. Requires Google authentication
 
 ### Provisioning Google Storage
 
@@ -110,12 +132,12 @@ Set the environment variable `HUTEL_USE_GOOGLE_STORAGE`
 
 All done, you can now run the server with `dotnet run`
 
-## Authentication
+### Enabling Google Drive Storage
 
-Basic authentication is supported. To use it, set the environment variables (example for Windows):
+To use Google Drive storage, enable Google authentication and set the environment variable (example for Windows):
 
 ```Batchfile
-set HUTEL_USE_BASIC_AUTH=1
-set HUTEL_BASIC_AUTH_USERNAME=user
-set HUTEL_BASIC_AUTH_PASSWORD=P@ssw0rd
+set HUTEL_USE_GOOGLE_DRIVE=1
 ```
+
+Tags and points will be stored in `Hutel` folder in the root of the Drive.
