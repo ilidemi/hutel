@@ -26,7 +26,12 @@
                 }
             },
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "HUTEL_USE_GOOGLE_AUTH": "1",
+                "GOOGLE_PROJECT_ID": "human-telemetry",
+                "GOOGLE_CLIENT_SECRET": "Rr-By8-VB3WWtspT-nIrFha5",
+                "GOOGLE_CLIENT_ID": "969040452809-n48m7rhvqshripug67rm11bcsjtctcm0.apps.googleusercontent.com",
+                "HUTEL_USE_GOOGLE_DRIVE": "1"
             },
             "sourceFileMap": {
                 "/Views": "${workspaceRoot}/Views"
