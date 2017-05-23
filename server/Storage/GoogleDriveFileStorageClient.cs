@@ -32,6 +32,7 @@ namespace hutel.Storage
             {
                 await Init();
             }
+            Console.WriteLine("ReadAllAsync");
 
             var file = await FindFileInRootFolder(path);
             if (file == null)
@@ -54,6 +55,7 @@ namespace hutel.Storage
             {
                 await Init();
             }
+            Console.WriteLine("WriteAllAsync");
 
             var existingFile = await FindFileInRootFolder(path);
             if (existingFile != null)
@@ -89,6 +91,7 @@ namespace hutel.Storage
             {
                 await Init();
             }
+            Console.WriteLine("ExistsAsync");
 
             var file = await FindFileInRootFolder(path);
             return file != null;
@@ -100,6 +103,7 @@ namespace hutel.Storage
             {
                 await Init();
             }
+            Console.WriteLine("CopyAsync");
 
             var sourceFile = await FindFileInRootFolder(source);
             if (sourceFile == null)
@@ -122,6 +126,7 @@ namespace hutel.Storage
             {
                 await Init();
             }
+            Console.WriteLine("DeleteAsync");
 
             var file = await FindFileInRootFolder(path);
             if (file == null)
@@ -135,6 +140,7 @@ namespace hutel.Storage
 
         private async Task Init()
         {
+            Console.WriteLine("Init");
             var HttpClientInitializer = new GoogleHttpClientInitializer(_userId);
             _driveService = new DriveService(
                 new DriveService.Initializer
@@ -145,6 +151,7 @@ namespace hutel.Storage
             );
 
             _rootFolderId = (await CreateOrGetRootFolder()).Id;
+            _initialized = true;
         }
 
         private async Task<GoogleFile> CreateOrGetRootFolder()
@@ -176,6 +183,7 @@ namespace hutel.Storage
 
         private async Task<GoogleFile> FindFileInRootFolder(string path)
         {
+            Console.WriteLine("FindFileInRootFolderAsync");
             var listRequest = _driveService.Files.List();
             listRequest.Q = $"title = '{path}' and '{_rootFolderId}' in parents";
             listRequest.Spaces = "drive";
