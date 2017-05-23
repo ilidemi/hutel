@@ -17,8 +17,8 @@ namespace hutel.Controllers
     {
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger _logger;
-        private readonly Lazy<IFileStorageClient> _storageClientLazy;
-        private IFileStorageClient _storageClient
+        private readonly Lazy<IHutelStorageClient> _storageClientLazy;
+        private IHutelStorageClient _storageClient
         {
             get { return _storageClientLazy.Value; }
         }
@@ -26,28 +26,26 @@ namespace hutel.Controllers
         private const string _envUseGoogleDrive = "HUTEL_USE_GOOGLE_DRIVE";        
         private const string _pointsKey = "points";
         private const string _tagsKey = "tags";
-        private const string _storagePath = "storage.json";
-        private const string _storageBackupPath = "storage.json.bak";
-        private const string _tagsPath = "tags.json";
-        private const string _tagsBackupPath = "tags.json.bak";
 
         public ApiController(IMemoryCache memoryCache, ILogger<ApiController> logger)
         {
             if (Environment.GetEnvironmentVariable(_envUseGoogleDrive) == "1")
             {
-                _storageClientLazy = new Lazy<IFileStorageClient>(() =>
+                _storageClientLazy = new Lazy<IHutelStorageClient>(() =>
                 {
                     var userId = (string)HttpContext.Items["UserId"];
-                    return new GoogleDriveFileStorageClient(userId);
+                    return new GoogleDriveHutelStorageClient(userId);
                 });
             }
             else if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) == "1")
             {
-                _storageClientLazy = new Lazy<IFileStorageClient>(() => new GoogleCloudFileStorageClient());
+                _storageClientLazy = new Lazy<IHutelStorageClient>(() => 
+                    new FileHutelStorageClient(new GoogleCloudFileStorageClient()));
             }
             else
             {
-                _storageClientLazy = new Lazy<IFileStorageClient>(() => new LocalFileStorageClient());
+                _storageClientLazy = new Lazy<IHutelStorageClient>(() =>
+                    new FileHutelStorageClient(new LocalFileStorageClient()));
             }
             _logger = logger;
             _memoryCache = memoryCache;
@@ -208,29 +206,21 @@ namespace hutel.Controllers
             {
                 return points;
             }
-
-            if (await _storageClient.ExistsAsync(_storagePath))
+            var pointsString = await _storageClient.ReadPointsAsStringAsync();
+            var pointsDataContractList = pointsString == string.Empty
+                ? new PointsStorageDataContract()
+                : JsonConvert.DeserializeObject<PointsStorageDataContract>(pointsString);
+            var duplicatePoints = pointsDataContractList
+                .GroupBy(point => point.Id)
+                .Where(g => g.Count() > 1);
+            if (duplicatePoints.Any())
             {
-                var pointsString = await _storageClient.ReadAllAsync(_storagePath);
-                var pointsDataContractList = pointsString == string.Empty
-                    ? new PointsStorageDataContract()
-                    : JsonConvert.DeserializeObject<PointsStorageDataContract>(pointsString);
-                var duplicatePoints = pointsDataContractList
-                    .GroupBy(point => point.Id)
-                    .Where(g => g.Count() > 1);
-                if (duplicatePoints.Any())
-                {
-                    throw new InvalidOperationException(
-                        $"Duplicate point ids in config: {string.Join(", ", duplicatePoints)}");
-                }
-                points = pointsDataContractList.ToDictionary(
-                    point => point.Id,
-                    point => Point.FromDataContract(point, tags));
+                throw new InvalidOperationException(
+                    $"Duplicate point ids in config: {string.Join(", ", duplicatePoints)}");
             }
-            else
-            {
-                points = new Dictionary<Guid, Point>();
-            }
+            points = pointsDataContractList.ToDictionary(
+                point => point.Id,
+                point => Point.FromDataContract(point, tags));
 
             _memoryCache.Set(_pointsKey, points);
             return points;
@@ -240,18 +230,10 @@ namespace hutel.Controllers
             Dictionary<Guid, Point> points,
             Dictionary<string, Tag> tags)
         {
-            if (await _storageClient.ExistsAsync(_storageBackupPath))
-            {
-                await _storageClient.DeleteAsync(_storageBackupPath);
-            }
-            if (await _storageClient.ExistsAsync(_storagePath))
-            {
-                await _storageClient.CopyAsync(_storagePath, _storageBackupPath);
-            }
             var pointsJson = JsonConvert.SerializeObject(
                 points.Values.Select(p => p.ToDataContract(tags)).ToList(),
                 Formatting.Indented);
-            await _storageClient.WriteAllAsync(_storagePath, pointsJson);
+            await _storageClient.WritePointsAsStringAsync(pointsJson);
             _memoryCache.Set(_pointsKey, points);
         }
 
@@ -262,15 +244,10 @@ namespace hutel.Controllers
             {
                 return tags;
             }
-
-            if (!await _storageClient.ExistsAsync(_tagsPath))
-            {
-                throw new InvalidOperationException("Tags config doesn't exist");
-            }
-            var tagsString = await _storageClient.ReadAllAsync(_tagsPath);
+            var tagsString = await _storageClient.ReadTagsAsStringAsync();
             var tagsDataContractList =
                 JsonConvert.DeserializeObject<List<TagDataContract>>(tagsString);
-            if (!tagsDataContractList.Any())
+            if (tagsString == string.Empty || !tagsDataContractList.Any())
             {
                 throw new InvalidOperationException("Tags list is empty");
             }
@@ -291,17 +268,9 @@ namespace hutel.Controllers
 
         private async Task WriteTags(Dictionary<string, Tag> tags)
         {
-            if (await _storageClient.ExistsAsync(_tagsBackupPath))
-            {
-                await _storageClient.DeleteAsync(_tagsBackupPath);
-            }
-            if (await _storageClient.ExistsAsync(_tagsPath))
-            {
-                await _storageClient.CopyAsync(_tagsPath, _tagsBackupPath);
-            }
             var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
             var tagsJson = JsonConvert.SerializeObject(tagsDataContract, Formatting.Indented);
-            await _storageClient.WriteAllAsync(_tagsPath, tagsJson);
+            await _storageClient.WriteTagsAsStringAsync(tagsJson);
             _memoryCache.Set(_tagsKey, tags);
         }
     }
