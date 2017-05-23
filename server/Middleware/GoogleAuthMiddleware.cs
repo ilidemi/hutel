@@ -105,9 +105,16 @@ namespace hutel.Middleware
                 httpContext.Response.Redirect(authEndpoint);
                 return;
             }
+            var authEndpointWithHint = authEndpoint + $"&login_hint={session.UserId}";
             if (session.Expiration < DateTime.UtcNow)
             {
-                httpContext.Response.Redirect(authEndpoint + $"&login_hint={session.UserId}");
+                httpContext.Response.Redirect(authEndpointWithHint);
+                return;
+            }
+            var token = await _tokenClient.GetAsync(session.UserId);
+            if (token == null)
+            {
+                httpContext.Response.Redirect(authEndpointWithHint);
                 return;
             }
             httpContext.Items["UserId"] = session.UserId;
