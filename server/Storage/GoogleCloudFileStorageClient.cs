@@ -8,12 +8,12 @@ using Google.Cloud.Storage.V1;
 
 namespace hutel.Storage
 {
-    public class GoogleCloudStorageClient: IStorageClient
+    public class GoogleCloudFileStorageClient: IFileStorageClient
     {
         private const string _bucket = "hutel-storage";
         private StorageClient _googleStorageClient;
 
-        public GoogleCloudStorageClient()
+        public GoogleCloudFileStorageClient()
         {
             _googleStorageClient = StorageClient.Create();
         }

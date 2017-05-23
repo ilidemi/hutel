@@ -11,7 +11,7 @@ using Google.Apis.Auth.OAuth2.Flows;
 
 namespace hutel.Storage
 {
-    public class GoogleDriveStorageClient: IStorageClient
+    public class GoogleDriveFileStorageClient: IFileStorageClient
     {
         private const string _applicationName = "Human Telemetry";
         private const string _rootFolderName = "Hutel";
@@ -21,7 +21,7 @@ namespace hutel.Storage
         private DriveService _driveService;
         private string _rootFolderId;
 
-        public GoogleDriveStorageClient(string userId)
+        public GoogleDriveFileStorageClient(string userId)
         {
             _userId = userId;
         }

@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 
 namespace hutel.Storage
 {
-    public interface IStorageClient
+    public interface IFileStorageClient
     {
         Task<string> ReadAllAsync(string path);
 

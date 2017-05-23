@@ -17,8 +17,8 @@ namespace hutel.Controllers
     {
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger _logger;
-        private readonly Lazy<IStorageClient> _storageClientLazy;
-        private IStorageClient _storageClient
+        private readonly Lazy<IFileStorageClient> _storageClientLazy;
+        private IFileStorageClient _storageClient
         {
             get { return _storageClientLazy.Value; }
         }
@@ -35,19 +35,19 @@ namespace hutel.Controllers
         {
             if (Environment.GetEnvironmentVariable(_envUseGoogleDrive) == "1")
             {
-                _storageClientLazy = new Lazy<IStorageClient>(() =>
+                _storageClientLazy = new Lazy<IFileStorageClient>(() =>
                 {
                     var userId = (string)HttpContext.Items["UserId"];
-                    return new GoogleDriveStorageClient(userId);
+                    return new GoogleDriveFileStorageClient(userId);
                 });
             }
             else if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) == "1")
             {
-                _storageClientLazy = new Lazy<IStorageClient>(() => new GoogleCloudStorageClient());
+                _storageClientLazy = new Lazy<IFileStorageClient>(() => new GoogleCloudFileStorageClient());
             }
             else
             {
-                _storageClientLazy = new Lazy<IStorageClient>(() => new LocalStorageClient());
+                _storageClientLazy = new Lazy<IFileStorageClient>(() => new LocalFileStorageClient());
             }
             _logger = logger;
             _memoryCache = memoryCache;

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace hutel.Storage
 {
-    public class LocalStorageClient: IStorageClient
+    public class LocalFileStorageClient: IFileStorageClient
     {
         public async Task<string> ReadAllAsync(string path)
         {
