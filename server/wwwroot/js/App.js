@@ -22,7 +22,10 @@ class App extends React.Component {
     this.state = {
       points: [],
       tags: [],
-      selectedTagId: null
+      selectedTagId: null,
+      selectTagLoading: true,
+      pointHistoryLoading: true,
+      pointInputLoading: false
     }
   }
 
@@ -32,6 +35,9 @@ class App extends React.Component {
   }
 
   updateHistory() {
+    this.setState({pointHistoryLoading: true}, function(){
+      console.log(this.state);
+    });
     $.ajax({
       url: "/api/points",
       data: {
@@ -40,28 +46,37 @@ class App extends React.Component {
       dataType:'json',
       cache: false,
       success: function(data){
-        this.setState({points: data}, function(){
+        this.setState({points: data, pointHistoryLoading: false}, function(){
           console.log(this.state);
         });
       }.bind(this),
       error: function(xhr, status, err){
         console.log(err);
+        this.setState({pointHistoryLoading: false}, function(){
+          console.log(this.state);
+        });
       }.bind(this)
     });
   }
 
   updateTags() {
+    this.setState({selectTagLoading: true}, function() {
+      console.log(this.state);
+    });
     $.ajax({
       url: "/api/tags",
       dataType: "json",
       cache: false,
       success: function(data) {
-        this.setState({tags: data}, function() {
+        this.setState({tags: data, selectTagLoading: false}, function() {
           console.log(this.state);
-        }.bind(this));
+        });
       }.bind(this),
       error: function(xhr, status, err) {
         console.log(err);
+        this.setState({selectTagLoading: false}, function() {
+          console.log(this.state);
+        });
       }.bind(this)
     });
   }
@@ -80,6 +95,9 @@ class App extends React.Component {
 
   submitPoint(point) {
     console.log("Submitting point", point);
+    this.setState({pointInputLoading: true}, function() {
+      console.log(this.state);
+    });
     $.ajax({
       url: "/api/points",
       dataType: "json",
@@ -89,11 +107,17 @@ class App extends React.Component {
       success: function(data) {
         console.log(data);
         this.resetTag();
+        this.setState({pointInputLoading: false}, function() {
+          console.log(this.state);
+        });
         this.updateHistory();
       }.bind(this),
       error: function(xhr, status, err) {
         console.log(err);
         this.resetTag();
+        this.setState({pointInputLoading: false}, function() {
+          console.log(this.state);
+        });
       }.bind(this)
     });
   }
@@ -133,11 +157,13 @@ class App extends React.Component {
       background: theme.historyBackground
     }
     var selectTag = <SelectTag
+      loading={this.state.selectTagLoading}
       tags={this.state.tags}
       selectTag={this.selectTag.bind(this)}
       theme={theme}
     />;
     var pointInput = <PointInput
+      loading={this.state.pointInputLoading}
       tag={this.state.tags.find(tag => tag.id === this.state.selectedTagId)}
       resetTag={this.resetTag.bind(this)}
       submitPoint={this.submitPoint.bind(this)}
@@ -161,6 +187,7 @@ class App extends React.Component {
           <Divider />
           <div style={pointHistoryStyle}>
             <PointHistory
+              loading={this.state.pointHistoryLoading}
               points={this.state.points}
               theme={theme}
             />

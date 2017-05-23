@@ -5,6 +5,7 @@ import update from 'immutability-helper';
 
 import FlatButton from 'material-ui/FlatButton'
 import FontIcon from 'material-ui/FontIcon'
+import LinearProgress from 'material-ui/LinearProgress';
 import RaisedButton from 'material-ui/RaisedButton'
 
 import * as Constants from './Constants';
@@ -107,6 +108,9 @@ class PointInput extends React.Component {
     const buttonStyle = {
       margin: 8
     };
+    var loadingIndicator = this.props.loading
+      ? <LinearProgress mode="indeterminate" />
+      : null;
     return (
       <div style={style}>
         <div>
@@ -139,12 +143,14 @@ class PointInput extends React.Component {
             onClick={this.submitPoint.bind(this)}
           />
         </div>
+        {loadingIndicator}
       </div>
     );
   }
 }
 
 PointInput.propTypes = {
+  loading: PropTypes.bool,
   tag: PropTypes.object,
   resetTag: PropTypes.func,
   submitPoint: PropTypes.func,
