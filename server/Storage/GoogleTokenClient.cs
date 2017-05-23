@@ -43,7 +43,11 @@ namespace hutel.Storage
             var entity = new Entity
             {
                 Key = key,
-                ["Token"] = JsonConvert.SerializeObject(value)
+                ["Token"] = new Value
+                {
+                    StringValue = JsonConvert.SerializeObject(value),
+                    ExcludeFromIndexes = true
+                }
             };
             using (var transaction = await _db.BeginTransactionAsync())
             {
