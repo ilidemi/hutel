@@ -76,13 +76,25 @@ namespace hutel.Storage
                 }
             );
 
-            _rootFolderId = await GetOrCreateFile(FolderMimeType, RootFolderName, null);
-            _pointsFileId = await GetOrCreateFile(null, PointsFileName, _rootFolderId);
-            _tagsFileId = await GetOrCreateFile(null, TagsFileName, _rootFolderId);
+            var rootFolder = await GetOrCreateFileAsync(RootFolderName, FolderMimeType, null);
+            _rootFolderId = rootFolder.Id;
+            var pointsFile = await GetOrCreateFileAsync(PointsFileName, null, _rootFolderId);
+            if (pointsFile.CreatedDate.HasValue &&
+                (DateTime.Now - pointsFile.CreatedDate.Value).Days >= 1)
+            {
+                var backupDateString = pointsFile.CreatedDate.Value.ToString("yyyy-MM-dd");
+                var backupFileName = $"storage-{backupDateString}.json";
+                await RenameFile(pointsFile.Id, backupFileName);
+                pointsFile = await CreateFileAsync(PointsFileName, null, _rootFolderId);
+            }
+            _pointsFileId = pointsFile.Id;
+            var tagsFile = await GetOrCreateFileAsync(TagsFileName, null, _rootFolderId);
+            _tagsFileId = tagsFile.Id;
             _initialized = true;
         }
 
-        private async Task<string> GetOrCreateFile(string mimeType, string name, string parent)
+        private async Task<GoogleFile> GetOrCreateFileAsync(
+            string name, string mimeType, string parent)
         {
             var listRequest = _driveService.Files.List();
             var parentId = parent != null ? parent : "root";
@@ -93,26 +105,43 @@ namespace hutel.Storage
             var validFiles = fileList.Items.Where(file => file.Labels.Trashed != true).ToList();
             if (validFiles.Count > 0)
             {
-                return validFiles[0].Id;
+                return validFiles[0];
             }
             else
             {
-                var fileMetadata = new GoogleFile
-                {
-                    Title = name,
-                    MimeType = mimeType,
-                    Parents = new List<ParentReference>
-                        {
-                            parent != null
-                                ? new ParentReference{ Id = parentId }
-                                : new ParentReference{ IsRoot = true }
-                        }
-                };
-                var request = _driveService.Files.Insert(fileMetadata);
-                request.Fields = "id";
-                var file = await request.ExecuteAsync();
-                return file.Id;
+                return await CreateFileAsync(name, mimeType, parent);
             }
+        }
+
+        private async Task<GoogleFile> CreateFileAsync(string name, string mimeType, string parent)
+        {
+            var parentId = parent != null ? parent : "root";
+            var fileMetadata = new GoogleFile
+            {
+                Title = name,
+                MimeType = mimeType,
+                Parents = new List<ParentReference>
+                    {
+                        parent != null
+                            ? new ParentReference{ Id = parentId }
+                            : new ParentReference{ IsRoot = true }
+                    }
+            };
+            var request = _driveService.Files.Insert(fileMetadata);
+            request.Fields = "id";
+            var file = await request.ExecuteAsync();
+            return file;
+        }
+
+        private async Task<GoogleFile> RenameFile(string fileId, string name)
+        {
+            var fileMetadata = new GoogleFile
+            {
+                Title = name
+            };
+            var updateRequest = _driveService.Files.Update(fileMetadata, fileId);
+            var file = await updateRequest.ExecuteAsync();
+            return file;
         }
 
         private async Task<string> ReadFileAsStringAsync(string fileId)
