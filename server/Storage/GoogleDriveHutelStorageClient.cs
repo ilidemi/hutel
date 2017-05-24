@@ -93,7 +93,7 @@ namespace hutel.Storage
             var validFiles = fileList.Items.Where(file => file.Labels.Trashed != true).ToList();
             if (validFiles.Count > 0)
             {
-                return fileList.Items[0].Id;
+                return validFiles[0].Id;
             }
             else
             {
