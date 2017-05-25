@@ -8,7 +8,7 @@ namespace hutel.Logic
     public class Point
     {
         public static readonly IList<string> ReservedFields =
-            new List<string> { "id", "tagId", "date" };
+            new List<string> { "id", "tagId", "date", "submitTimestamp" };
 
         public Guid Id { get; set; }
         
@@ -16,39 +16,57 @@ namespace hutel.Logic
         
         public HutelDate Date { get; set; }
 
+        public HutelTimestamp SubmitTimestamp { get; set; }
+
         public Dictionary<string, object> Extra { get; set; }
 
-        public PointWithIdDataContract ToDataContract(Dictionary<string, Tag> tags)
+        public StoredPointDataContract ToDataContract(Dictionary<string, Tag> tags)
         {
             var tag = tags[TagId];
             var jsonExtra = Extra.ToDictionary(
                 kvPair => kvPair.Key,
                 kvPair => tag.Fields[kvPair.Key].ValueToDataContract(kvPair.Value));
-            return new PointWithIdDataContract
+            return new StoredPointDataContract
             {
                 Id = Id,
                 TagId = TagId,
                 Date = Date.ToString(),
+                SubmitTimestamp = SubmitTimestamp.ToString(),
                 Extra = jsonExtra
             };
         }
 
         public static Point FromDataContract(
-            PointDataContract input, Guid id, Dictionary<string, Tag> tags)
+            PointDataContract input,
+            Guid id,
+            HutelTimestamp submitTimestamp,
+            Dictionary<string, Tag> tags)
         {
-            return FromFields(id, input.TagId, input.Date, input.Extra, tags);
+            return FromFields(
+                id, input.TagId, input.Date, submitTimestamp, input.Extra, tags);
         }
 
         public static Point FromDataContract(
-            PointWithIdDataContract input, Dictionary<string, Tag> tags)
+            StoredPointDataContract input, Dictionary<string, Tag> tags)
         {
-            return FromFields(input.Id, input.TagId, input.Date, input.Extra, tags);
+            try
+            {
+                var pointSubmitTimestamp = new HutelTimestamp(input.SubmitTimestamp);
+                return FromFields(
+                    input.Id, input.TagId, input.Date, pointSubmitTimestamp, input.Extra, tags);
+            }
+            catch (FormatException ex)
+            {
+                throw new PointValidationException(
+                    $"Malformed timestamp: {input.SubmitTimestamp}", ex);
+            }
         }
 
         private static Point FromFields(
             Guid id,
             string tagId,
             string date,
+            HutelTimestamp submitTimestamp,
             Dictionary<string, Object> extra,
             Dictionary<string, Tag> tags)
         {
@@ -82,6 +100,7 @@ namespace hutel.Logic
                         $"Malformed property: {extra[tagField.Name]}", ex);
                 }
             }
+
             try
             {
                 var pointDate = new HutelDate(date);
@@ -90,6 +109,7 @@ namespace hutel.Logic
                     Id = id,
                     TagId = tagId,
                     Date = pointDate,
+                    SubmitTimestamp = submitTimestamp,
                     Extra = pointExtra
                 };
             }

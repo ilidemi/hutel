@@ -61,7 +61,7 @@ namespace hutel.Tests
                 { TimeFieldName, "10:09:08" },
                 { EnumFieldName, EnumValueA }
             };
-            var pointDataContract = new PointWithIdDataContract
+            var pointDataContract = new StoredPointDataContract
             {
                 Id = SampleGuid,
                 TagId = CompleteTag.Id,
@@ -82,7 +82,7 @@ namespace hutel.Tests
         [Fact]
         public void FromDataContractUnknownTag()
         {
-            var pointDataContract = new PointWithIdDataContract
+            var pointDataContract = new StoredPointDataContract
             {
                 Id = SampleGuid,
                 TagId = "unknownTag",
@@ -96,7 +96,7 @@ namespace hutel.Tests
         [Fact]
         public void FromDataContractUnknownProperty()
         {
-            var pointDataContract = new PointWithIdDataContract
+            var pointDataContract = new StoredPointDataContract
             {
                 Id = SampleGuid,
                 TagId = EmptyTag.Id,
@@ -113,7 +113,7 @@ namespace hutel.Tests
         [Fact]
         public void FromDataContractMissingProperty()
         {
-            var pointDataContract = new PointWithIdDataContract
+            var pointDataContract = new StoredPointDataContract
             {
                 Id = SampleGuid,
                 TagId = CompleteTag.Id,

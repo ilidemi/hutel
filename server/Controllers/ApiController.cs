@@ -107,7 +107,7 @@ namespace hutel.Controllers
             Point point;
             try
             {
-                point = Point.FromDataContract(input, id, tags);
+                point = Point.FromDataContract(input, id, new HutelTimestamp(DateTime.Now), tags);
             }
             catch(PointValidationException ex)
             {
@@ -132,7 +132,7 @@ namespace hutel.Controllers
             Point point;
             try
             {
-                point = Point.FromDataContract(input, id, tags);
+                point = Point.FromDataContract(input, id, points[id].SubmitTimestamp, tags);
             }
             catch(PointValidationException ex)
             {
@@ -141,7 +141,8 @@ namespace hutel.Controllers
             if (string.Compare(point.TagId, points[id].TagId, true) != 0) {
                 return new BadRequestObjectResult(
                     new ArgumentOutOfRangeException(
-                        $"Tag id differs from the known one. Expected: {points[id].TagId}, got: {point.TagId}").ToString());
+                        $"Tag id differs from the known one. " +
+                        $"Expected: {points[id].TagId}, got: {point.TagId}").ToString());
             }
             points[id] = point;
             await WriteStorage(points, tags);

@@ -4,11 +4,11 @@ using Newtonsoft.Json;
 
 namespace hutel.Models
 {
-    public class PointsStorageDataContract : List<PointWithIdDataContract>
+    public class PointsStorageDataContract : List<StoredPointDataContract>
     {
     }
 
-    public class PointWithIdDataContract
+    public class StoredPointDataContract
     {
         [JsonProperty(Required = Required.Always)]
         public Guid Id { get; set; }
@@ -18,6 +18,9 @@ namespace hutel.Models
         
         [JsonProperty(Required = Required.Always)]
         public string Date { get; set; }
+        
+        [JsonProperty(Required = Required.Always)]
+        public string SubmitTimestamp { get; set; }
 
         [JsonExtensionData]
         public Dictionary<string, object> Extra { get; set; }
