@@ -66,6 +66,7 @@ namespace hutel.Tests
                 Id = SampleGuid,
                 TagId = CompleteTag.Id,
                 Date = SampleDate,
+                SubmitTimestamp = SampleTimestmap,
                 Extra = extraFields
             };
             var point = Point.FromDataContract(pointDataContract, AllTags);
@@ -87,6 +88,7 @@ namespace hutel.Tests
                 Id = SampleGuid,
                 TagId = "unknownTag",
                 Date = SampleDate,
+                SubmitTimestamp = SampleTimestmap,
                 Extra = new Dictionary<string, Object>()
             };
             Assert.Throws<PointValidationException>(
@@ -101,6 +103,7 @@ namespace hutel.Tests
                 Id = SampleGuid,
                 TagId = EmptyTag.Id,
                 Date = SampleDate,
+                SubmitTimestamp = SampleTimestmap,
                 Extra = new Dictionary<string, Object>
                 {
                     { "unknownField", "value" }
@@ -118,6 +121,7 @@ namespace hutel.Tests
                 Id = SampleGuid,
                 TagId = CompleteTag.Id,
                 Date = SampleDate,
+                SubmitTimestamp = SampleTimestmap,
                 Extra = new Dictionary<string, Object>()
             };
             Assert.Throws<PointValidationException>(
