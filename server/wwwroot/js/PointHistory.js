@@ -11,7 +11,7 @@ import Subheader from 'material-ui/Subheader';
 class PointHistory extends React.Component {
   constructor(props) {
     super(props);
-    this.hiddenFields = ['id', 'tagId', 'date'];
+    this.hiddenFields = ['id', 'tagId', 'date', 'submitTimestamp'];
   }
   
   humanizeDate(value) {
