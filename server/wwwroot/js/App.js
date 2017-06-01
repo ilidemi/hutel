@@ -41,7 +41,7 @@ class App extends React.Component {
     $.ajax({
       url: "/api/points",
       data: {
-        startDate: moment().subtract(30, 'days').format(Constants.dateFormat)
+        startDate: moment().subtract(7, 'days').format(Constants.dateFormat)
       },
       dataType:'json',
       cache: false,
