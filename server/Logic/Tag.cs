@@ -17,10 +17,6 @@ namespace hutel.Logic
             {
                 throw new TagValidationException("Tag id is empty");
             }
-            if (!input.Fields.Any())
-            {
-                throw new TagValidationException("Tag doesn't contain any fields");
-            }
             foreach (var field in input.Fields)
             {
                 if (Point.ReservedFields.Any(name => string.Compare(name, field.Name, true) == 0))

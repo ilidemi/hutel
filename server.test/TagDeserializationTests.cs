@@ -67,8 +67,17 @@ namespace hutel.Tests
             Assert.Contains(EnumValueB, enumFieldType.Values);
         }
 
+        [Fact]
+        public void ValidEmptyTag()
+        {
+            var json = "{ 'id': 'id', 'fields': [] }";
+            var tagDataContract = JsonConvert.DeserializeObject<TagDataContract>(json);
+            var tag = Tag.FromDataContract(tagDataContract);
+            Assert.Equal(tag.Id, "id");
+            Assert.Empty(tag.Fields);
+        }
+
         [Theory]
-        [InlineData("{ 'id': 'id', 'fields': [] }")]
         [InlineData("{ 'id': 'id', 'fields': [{ 'name': 'f', 'type': 'int' }, { 'name': 'f', 'type': 'float' }] }")]
         [InlineData("{ 'id': 'id', 'fields': [{ 'name': 'f', 'type': 'unknownType' }] }")]
         public void InvalidTag(string json)
