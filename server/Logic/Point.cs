@@ -75,17 +75,21 @@ namespace hutel.Logic
                 throw new PointValidationException($"Unknown tag: {tagId}");
             }
             var tag = tags[tagId];
-            foreach (var pointField in extra.Keys)
+            if (extra != null)
             {
-                if (!tag.Fields.ContainsKey(pointField))
+                foreach (var pointField in extra.Keys)
                 {
-                    throw new PointValidationException($"Unknown property: {pointField}");
+                    if (!tag.Fields.ContainsKey(pointField))
+                    {
+                        throw new PointValidationException($"Unknown property: {pointField}");
+                    }
                 }
             }
+
             var pointExtra = new Dictionary<string, Object>();
             foreach (var tagField in tag.Fields.Values)
             {
-                if (!extra.ContainsKey(tagField.Name))
+                if (extra == null || !extra.ContainsKey(tagField.Name))
                 {
                     throw new PointValidationException($"Property not found: {tagField.Name}");
                 }
