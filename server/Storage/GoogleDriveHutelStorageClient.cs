@@ -25,7 +25,9 @@ namespace hutel.Storage
         private DriveService _driveService;
         private string _rootFolderId;
         private string _pointsFileId;
+        private DateTime? _pointsFileModificationDate;
         private string _tagsFileId;
+        private DateTime? _tagsFileModificationDate;
         
         public GoogleDriveHutelStorageClient(string userId)
         {
@@ -44,6 +46,7 @@ namespace hutel.Storage
         {
             await InitAsync();
             Console.WriteLine("WritePointsAsStringAsync");
+            await BackupStorageIfNeededAsync();
             await WriteFileAsStringAsync(_pointsFileId, data);
         }
 
@@ -58,6 +61,7 @@ namespace hutel.Storage
         {
             await InitAsync();
             Console.WriteLine("WriteTagsAsStringAsync");
+            await BackupTagsIfNeededAsync();
             await WriteFileAsStringAsync(_tagsFileId, data);
         }
 
@@ -79,18 +83,34 @@ namespace hutel.Storage
             var rootFolder = await GetOrCreateFileAsync(RootFolderName, FolderMimeType, null);
             _rootFolderId = rootFolder.Id;
             var pointsFile = await GetOrCreateFileAsync(PointsFileName, null, _rootFolderId);
-            if (pointsFile.CreatedDate.HasValue &&
-                (DateTime.Now - pointsFile.CreatedDate.Value).Days >= 1)
-            {
-                var backupDateString = pointsFile.CreatedDate.Value.ToString("yyyy-MM-dd");
-                var backupFileName = $"storage-{backupDateString}.json";
-                await RenameFile(pointsFile.Id, backupFileName);
-                pointsFile = await CreateFileAsync(PointsFileName, null, _rootFolderId);
-            }
             _pointsFileId = pointsFile.Id;
+            _pointsFileModificationDate = pointsFile.ModifiedDate;
             var tagsFile = await GetOrCreateFileAsync(TagsFileName, null, _rootFolderId);
             _tagsFileId = tagsFile.Id;
+            _tagsFileModificationDate = tagsFile.ModifiedDate;
             _initialized = true;
+        }
+
+        private async Task BackupStorageIfNeededAsync()
+        {
+            if (_pointsFileModificationDate.HasValue &&
+                (DateTime.Now - _pointsFileModificationDate.Value).Days >= 1)
+            {
+                var backupDateString = _pointsFileModificationDate.Value.ToString("yyyy-MM-dd");
+                var backupFileName = $"storage-{backupDateString}.json";
+                await CopyFileAsync(_pointsFileId, backupFileName);
+            }
+        }
+
+        private async Task BackupTagsIfNeededAsync()
+        {
+            if (_tagsFileModificationDate.HasValue &&
+                (DateTime.Now - _tagsFileModificationDate.Value).Days >= 1)
+            {
+                var backupDateString = _tagsFileModificationDate.Value.ToString("yyyy-MM-dd");
+                var backupFileName = $"tags-{backupDateString}.json";
+                await CopyFileAsync(_tagsFileId, backupFileName);
+            }
         }
 
         private async Task<GoogleFile> GetOrCreateFileAsync(
@@ -133,14 +153,14 @@ namespace hutel.Storage
             return file;
         }
 
-        private async Task<GoogleFile> RenameFile(string fileId, string name)
+        private async Task<GoogleFile> CopyFileAsync(string fileId, string name)
         {
             var fileMetadata = new GoogleFile
             {
                 Title = name
             };
-            var updateRequest = _driveService.Files.Update(fileMetadata, fileId);
-            var file = await updateRequest.ExecuteAsync();
+            var copyRequest = _driveService.Files.Copy(fileMetadata, fileId);
+            var file = await copyRequest.ExecuteAsync();
             return file;
         }
 
