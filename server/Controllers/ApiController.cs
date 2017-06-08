@@ -66,13 +66,22 @@ namespace hutel.Controllers
             var filteredPoints = points.Values
                     .Where(point => startDate == null || point.Date >= new HutelDate(startDate))
                     .ToList();
-            filteredPoints.Sort((p1, p2) => p2.Date.DateTime.CompareTo(p1.Date.DateTime));
+            filteredPoints.Sort((p1, p2) => 
+            {
+                var result = p2.Date.DateTime.CompareTo(p1.Date.DateTime);
+                if (result == 0)
+                {
+                    result = p2.SubmitTimestamp.DateTime.CompareTo(p1.SubmitTimestamp.DateTime);
+                }
+                return result;
+            });
             return Json(filteredPoints.Select(p => p.ToDataContract(tags)));
         }
 
         [HttpPut("/api/points")]
         [ValidateModelState]
-        public async Task<IActionResult> PutAllPoints([FromBody]PointsStorageDataContract replacementPoints)
+        public async Task<IActionResult> PutAllPoints(
+            [FromBody]PointsStorageDataContract replacementPoints)
         {
             var tags = await ReadTags();
             var points = await ReadStorage(tags);
