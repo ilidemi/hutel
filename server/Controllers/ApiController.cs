@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace hutel.Controllers
 {
@@ -26,6 +27,12 @@ namespace hutel.Controllers
         private const string _envUseGoogleDrive = "HUTEL_USE_GOOGLE_DRIVE";        
         private const string _pointsKey = "points";
         private const string _tagsKey = "tags";
+        private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings
+        { 
+            NullValueHandling = NullValueHandling.Ignore,
+            Formatting = Formatting.Indented,
+            ContractResolver = new CamelCasePropertyNamesContractResolver()
+        };
 
         public ApiController(IMemoryCache memoryCache, ILogger<ApiController> logger)
         {
@@ -232,8 +239,7 @@ namespace hutel.Controllers
             Dictionary<string, Tag> tags)
         {
             var pointsJson = JsonConvert.SerializeObject(
-                points.Values.Select(p => p.ToDataContract(tags)).ToList(),
-                Formatting.Indented);
+                points.Values.Select(p => p.ToDataContract(tags)).ToList(), jsonSettings);
             await _storageClient.WritePointsAsStringAsync(pointsJson);
             _memoryCache.Set(_pointsKey, points);
         }
@@ -270,7 +276,7 @@ namespace hutel.Controllers
         private async Task WriteTags(Dictionary<string, Tag> tags)
         {
             var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
-            var tagsJson = JsonConvert.SerializeObject(tagsDataContract, Formatting.Indented);
+            var tagsJson = JsonConvert.SerializeObject(tagsDataContract, jsonSettings);
             await _storageClient.WriteTagsAsStringAsync(tagsJson);
             _memoryCache.Set(_tagsKey, tags);
         }

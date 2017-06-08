@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace server
 {
@@ -26,6 +27,10 @@ namespace server
                 .AddJsonOptions(opt =>
                 {
                     opt.SerializerSettings.DateParseHandling = DateParseHandling.None;
+                    opt.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                    opt.SerializerSettings.Formatting = Formatting.Indented;
+                    opt.SerializerSettings.ContractResolver =
+                        new CamelCasePropertyNamesContractResolver();
                 });
             services.AddScoped<ValidateModelStateAttribute>();
             services.AddMemoryCache();
