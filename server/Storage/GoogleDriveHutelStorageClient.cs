@@ -16,7 +16,9 @@ namespace hutel.Storage
     {
         private const string ApplicationName = "Human Telemetry";
         private const string RootFolderName = "Hutel";
+        private const string PointsFileBaseName = "storage";
         private const string PointsFileName = "storage.json";
+        private const string TagsFileBaseName = "tags";
         private const string TagsFileName = "tags.json";
         private const string FolderMimeType = "application/vnd.google-apps.folder";
         private const string JsonMimeType = "application/octet-stream";
@@ -25,9 +27,9 @@ namespace hutel.Storage
         private DriveService _driveService;
         private string _rootFolderId;
         private string _pointsFileId;
-        private DateTime? _pointsFileModificationDate;
+        private DateTime? _pointsLastBackupDate;
         private string _tagsFileId;
-        private DateTime? _tagsFileModificationDate;
+        private DateTime? _tagsLastBackupDate;
         
         public GoogleDriveHutelStorageClient(string userId)
         {
@@ -82,33 +84,85 @@ namespace hutel.Storage
 
             var rootFolder = await GetOrCreateFileAsync(RootFolderName, FolderMimeType, null);
             _rootFolderId = rootFolder.Id;
-            var pointsFile = await GetOrCreateFileAsync(PointsFileName, null, _rootFolderId);
+            var pointsFileTask = GetOrCreateFileAsync(PointsFileName, null, _rootFolderId);
+            var tagsFileTask = GetOrCreateFileAsync(TagsFileName, null, _rootFolderId);
+            var pointsLastBackupTask = FindLastBackupAsync(
+                PointsFileBaseName, PointsFileName, _rootFolderId);
+            var tagsLastBackupTask = FindLastBackupAsync(
+                TagsFileBaseName, TagsFileName, _rootFolderId);
+
+            var pointsFile = await pointsFileTask;
+            var tagsFile = await tagsFileTask;
+            var pointsLastBackup = await pointsLastBackupTask;
+            var tagsLastBackup = await tagsLastBackupTask;
+
             _pointsFileId = pointsFile.Id;
-            _pointsFileModificationDate = pointsFile.ModifiedDate;
-            var tagsFile = await GetOrCreateFileAsync(TagsFileName, null, _rootFolderId);
             _tagsFileId = tagsFile.Id;
-            _tagsFileModificationDate = tagsFile.ModifiedDate;
+            _pointsLastBackupDate = pointsLastBackup?.CreatedDate;
+            _tagsLastBackupDate = tagsLastBackup?.CreatedDate;
             _initialized = true;
+        }
+
+        private async Task<GoogleFile> FindLastBackupAsync(
+            string baseName, string fullName, string parent)
+        {
+            var listRequest = _driveService.Files.List();
+            listRequest.Q = $"title contains '{baseName}' and '{parent}' in parents";
+            listRequest.Spaces = "drive";
+            var fileList = await listRequest.ExecuteAsync();
+            var validFiles = fileList.Items
+                .Where(file => file.Labels.Trashed != true)
+                .Where(file => file.Title != fullName)
+                .ToList();
+            validFiles.Sort((a, b) => DateTimeOptCompareDesc(a.CreatedDate, b.CreatedDate));
+            if (validFiles.Count > 0)
+            {
+                return validFiles[0];
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private static int DateTimeOptCompareDesc(DateTime? a, DateTime? b)
+        {
+            if (!a.HasValue && !b.HasValue)
+            {
+                return 0;
+            }
+            else if (!a.HasValue)
+            {
+                return 1;
+            }
+            else if (!b.HasValue)
+            {
+                return -1;
+            }
+            else
+            {
+                return DateTime.Compare(a.Value, b.Value);
+            }
         }
 
         private async Task BackupStorageIfNeededAsync()
         {
-            if (_pointsFileModificationDate.HasValue &&
-                (DateTime.Now - _pointsFileModificationDate.Value).Days >= 1)
+            if (!_pointsLastBackupDate.HasValue ||
+                (DateTime.Now - _pointsLastBackupDate.Value).Days >= 1)
             {
-                var backupDateString = _pointsFileModificationDate.Value.ToString("yyyy-MM-dd");
-                var backupFileName = $"storage-{backupDateString}.json";
+                var backupDateString = DateTime.Now.ToString("yyyy-MM-dd");
+                var backupFileName = $"{PointsFileBaseName}-{backupDateString}.json";
                 await CopyFileAsync(_pointsFileId, backupFileName);
             }
         }
 
         private async Task BackupTagsIfNeededAsync()
         {
-            if (_tagsFileModificationDate.HasValue &&
-                (DateTime.Now - _tagsFileModificationDate.Value).Days >= 1)
+            if (!_tagsLastBackupDate.HasValue ||
+                (DateTime.Now - _tagsLastBackupDate.Value).Days >= 1)
             {
-                var backupDateString = _tagsFileModificationDate.Value.ToString("yyyy-MM-dd");
-                var backupFileName = $"tags-{backupDateString}.json";
+                var backupDateString = DateTime.Now.ToString("yyyy-MM-dd");
+                var backupFileName = $"{TagsFileBaseName}-{backupDateString}.json";
                 await CopyFileAsync(_tagsFileId, backupFileName);
             }
         }
