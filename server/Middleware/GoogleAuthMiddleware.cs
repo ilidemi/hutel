@@ -28,6 +28,7 @@ namespace hutel.Middleware
         private const string _tokenEndpointBase = "https://www.googleapis.com/oauth2/v4/token";
         private const string _userInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo";
         private readonly TimeSpan _expirationTime = TimeSpan.FromDays(7);
+        private readonly TimeSpan _expirationTimeThreshold = TimeSpan.FromDays(6);
         private readonly string _clientId;
         private readonly string _clientSecret;
         private readonly RequestDelegate _next;
@@ -118,8 +119,11 @@ namespace hutel.Middleware
                 httpContext.Response.Redirect(authEndpointWithHint);
                 return;
             }
-            session.Expiration = DateTime.UtcNow + _expirationTime;
-            await _sessionClient.SaveSessionAsync(session);
+            if (session.Expiration < DateTime.UtcNow + _expirationTimeThreshold)
+            {
+                session.Expiration = DateTime.UtcNow + _expirationTime;
+                await _sessionClient.SaveSessionAsync(session);
+            }
             httpContext.Items["UserId"] = session.UserId;
             await _next.Invoke(httpContext);
         }
