@@ -169,6 +169,9 @@ class App extends React.Component {
       submitPoint={this.submitPoint.bind(this)}
       theme={theme}
     />;
+    function headerClick() {
+      window.location = "/";
+    }
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
         <Paper
@@ -176,7 +179,11 @@ class App extends React.Component {
           zDepth={5}
         >
           <div style={headerStyle}>
-            <h1 className="mdc-typography--display2">
+            <h1
+              className="mdc-typography--display1"
+              onClick={headerClick}
+              onMouseOver=""
+              style={{cursor: "pointer"}}>
               Human Telemetry
             </h1>
           </div>
