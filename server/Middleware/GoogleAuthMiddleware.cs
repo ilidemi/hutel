@@ -81,7 +81,7 @@ namespace hutel.Middleware
                     {
                         SessionId = Guid.NewGuid().ToString(),
                         UserId = userId,
-                        Expiration = DateTime.Now + _expirationTime
+                        Expiration = DateTime.UtcNow + _expirationTime
                     };
                     await _sessionClient.SaveSessionAsync(newSession);
                     httpContext.Response.Cookies.Append(_sessionCookieKey, newSession.SessionId);

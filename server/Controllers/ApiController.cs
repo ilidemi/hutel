@@ -123,7 +123,8 @@ namespace hutel.Controllers
             Point point;
             try
             {
-                point = Point.FromDataContract(input, id, new HutelTimestamp(DateTime.Now), tags);
+                point = Point.FromDataContract(
+                    input, id, new HutelTimestamp(DateTime.UtcNow), tags);
             }
             catch(PointValidationException ex)
             {

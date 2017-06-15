@@ -148,7 +148,7 @@ namespace hutel.Storage
         private async Task BackupStorageIfNeededAsync()
         {
             if (!_pointsLastBackupDate.HasValue ||
-                (DateTime.Now - _pointsLastBackupDate.Value).Days >= 1)
+                (DateTime.UtcNow - _pointsLastBackupDate.Value).Days >= 1)
             {
                 var backupDateString = DateTime.Now.ToString("yyyy-MM-dd");
                 var backupFileName = $"{PointsFileBaseName}-{backupDateString}.json";
@@ -159,7 +159,7 @@ namespace hutel.Storage
         private async Task BackupTagsIfNeededAsync()
         {
             if (!_tagsLastBackupDate.HasValue ||
-                (DateTime.Now - _tagsLastBackupDate.Value).Days >= 1)
+                (DateTime.UtcNow - _tagsLastBackupDate.Value).Days >= 1)
             {
                 var backupDateString = DateTime.Now.ToString("yyyy-MM-dd");
                 var backupFileName = $"{TagsFileBaseName}-{backupDateString}.json";
