@@ -8,6 +8,8 @@ namespace hutel.Session
         Task<SessionInfo> LookupSessionAsync(string sessionId);
 
         Task SaveSessionAsync(SessionInfo session);
+
+        Task DeleteSessionAsync(string sessionId);
     }
 
     public class SessionInfo

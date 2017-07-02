@@ -56,5 +56,15 @@ namespace hutel.Session
                 await transaction.CommitAsync();
             }
         }
+
+        public async Task DeleteSessionAsync(string sessionId)
+        {
+            var key = _keyFactory.CreateKey(sessionId);
+            using (var transaction = await _db.BeginTransactionAsync())
+            {
+                transaction.Delete(key);
+                await transaction.CommitAsync();
+            }
+        }
     }
 }

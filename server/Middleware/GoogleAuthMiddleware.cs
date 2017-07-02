@@ -1,20 +1,12 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Cloud.Datastore.V1;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json.Linq;
-using hutel.Logic;
 using hutel.Session;
-using Google.Apis.Auth.OAuth2.Responses;
-using Google.Apis.Util.Store;
 using hutel.Storage;
 
 namespace hutel.Middleware
@@ -110,6 +102,7 @@ namespace hutel.Middleware
             var authEndpointWithHint = authEndpoint + $"&login_hint={session.UserId}";
             if (session.Expiration < DateTime.UtcNow)
             {
+                await _sessionClient.DeleteSessionAsync(session.SessionId);
                 httpContext.Response.Redirect(authEndpointWithHint);
                 return;
             }
