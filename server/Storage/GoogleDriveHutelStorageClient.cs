@@ -141,7 +141,7 @@ namespace hutel.Storage
             }
             else
             {
-                return DateTime.Compare(a.Value, b.Value);
+                return -DateTime.Compare(a.Value, b.Value);
             }
         }
 
