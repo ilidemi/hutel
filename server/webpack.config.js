@@ -7,7 +7,7 @@ module.exports = (env) => {
     const isDevBuild = !(env && env.prod);
     return [{
         stats: { modules: false },
-        entry: { 'main': path.join(__dirname, 'wwwroot', 'js', 'Index.js') },
+        entry: { 'main': path.join(__dirname, 'ViewModels', 'Index.js') },
         resolve: { extensions: [ '.js', '.jsx' ] },
         output: {
             path: path.join(__dirname, bundleOutputDir),
@@ -17,7 +17,7 @@ module.exports = (env) => {
         devtool: 'source-map',
         module: {
             rules: [
-                { test: /\.jsx?$/, include: /wwwroot/, use: 'babel-loader' },
+                { test: /\.jsx?$/, include: /ViewModels/, use: 'babel-loader' },
                 { test: /\.css$/, use: isDevBuild ? ['style-loader', 'css-loader'] : ExtractTextPlugin.extract({ use: 'css-loader' }) },
                 { test: /\.(png|jpg|jpeg|gif|svg)$/, use: 'url-loader?limit=25000' }
             ]
