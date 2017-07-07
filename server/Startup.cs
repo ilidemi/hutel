@@ -46,6 +46,7 @@ namespace server
                 app.UseDeveloperExceptionPage();
             }
             app.UseRedirectToHttpsMiddleware();
+            app.UseStaticFiles();
             if (Environment.GetEnvironmentVariable(_envUseBasicAuth) == "1")
             {
                 app.UseBasicAuthMiddleware();
@@ -55,7 +56,6 @@ namespace server
                 app.UseGoogleAuthMiddleware();
             }
             app.UseMvc();
-            app.UseStaticFiles();
         }
     }
 }
