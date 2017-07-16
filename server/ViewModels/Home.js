@@ -4,7 +4,13 @@ import PropTypes from 'prop-types';
 import $ from 'jquery';
 import moment from 'moment';
 
+import AppBar from 'material-ui/AppBar'
 import Divider from 'material-ui/Divider';
+import IconButton from 'material-ui/IconButton';
+import IconMenu from 'material-ui/IconMenu';
+import MenuItem from 'material-ui/MenuItem';
+import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
 import * as Constants from './Constants'
 import PointHistory from './PointHistory';
@@ -119,12 +125,6 @@ class Home extends React.Component {
 
   render() {
     const theme = this.props.theme;
-    const headerStyle = {
-      paddingLeft: 24,
-      paddingRight: 24,
-      color: theme.headerText,
-      background: theme.headerBackground
-    }
     var selectTagStyle = {
       background: theme.topBackground
     }
@@ -144,21 +144,30 @@ class Home extends React.Component {
       submitPoint={this.submitPoint.bind(this)}
       theme={theme}
     />;
-    function headerClick() {
-      window.location = "/"; // TODO: react-router
+    var props = this.props;
+    function navigateHome() {
+      props.history.push('/');
     }
     return (
       <div>
-        <div style={headerStyle}>
-          <h1
-            className="mdc-typography--display1"
-            onClick={headerClick}
-            onMouseOver=""
-            style={{cursor: "pointer"}}>
-            Human Telemetry
-          </h1>
-        </div>
-        <Divider />
+        <MuiThemeProvider muiTheme={theme.headerMuiTheme}>
+          <AppBar
+            title="Human Telemetry"
+            onLeftIconButtonTouchTap={navigateHome} // TODO: doesn't work as intended
+            iconElementRight={
+              <IconMenu
+                iconButtonElement={
+                  <IconButton><MoreVertIcon /></IconButton>
+                }
+                targetOrigin={{horizontal: 'right', vertical: 'top'}}
+                anchorOrigin={{horizontal: 'right', vertical: 'top'}}
+              >
+                <MenuItem primaryText="Edit raw tags" />
+                <MenuItem primaryText="Edit raw points" />
+              </IconMenu>
+            }
+          />
+        </MuiThemeProvider>
         <div style={selectTagStyle}>
           {this.state.selectedTagId === null ? selectTag : pointInput}
         </div>
@@ -176,6 +185,7 @@ class Home extends React.Component {
 }
 
 Home.propTypes = {
+  history: PropTypes.object,
   theme: PropTypes.object
 }
 

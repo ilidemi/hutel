@@ -1,7 +1,7 @@
 import React from 'react';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 
-import {Route} from 'react-router-dom';
+import { BrowserRouter, Route } from 'react-router-dom';
 
 import * as Colors from 'material-ui/styles/colors';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
@@ -16,6 +16,11 @@ const App = () => {
   const theme = {
     headerBackground: Colors.deepPurple900,
     headerText: Colors.fullWhite,
+    headerMuiTheme: getMuiTheme({
+      palette: {
+        primary1Color: Colors.deepPurple900
+      }
+    }),
     topBackground: Colors.fullWhite,
     historyBackground: Colors.grey100,
     historyDateText: Colors.deepPurple900
@@ -35,18 +40,20 @@ const App = () => {
     flexMinHeight: "100%"
   };
   return (
-    <MuiThemeProvider muiTheme={muiTheme}>
-      <Paper
-        style={columnStyle}
-        zDepth={5}
-      >
-        <div>
-          <Route exact path="/" render={(props) => (
-            <Home {...props} theme={theme} />
-          )} />
-        </div>
-      </Paper>
-    </MuiThemeProvider>
+    <BrowserRouter>
+      <MuiThemeProvider muiTheme={muiTheme}>
+        <Paper
+          style={columnStyle}
+          zDepth={5}
+        >
+          <div>
+            <Route exact path="/" render={(props) => (
+              <Home {...props} theme={theme} />
+            )} />
+          </div>
+        </Paper>
+      </MuiThemeProvider>
+    </BrowserRouter>
   );
 };
 
