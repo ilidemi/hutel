@@ -176,15 +176,16 @@ namespace hutel.Controllers
 
         [HttpPut("/api/tags")]
         [ValidateModelState]
-        public async Task<IActionResult> PutAllTags([FromBody]List<Tag> replacementTagsList)
+        public async Task<IActionResult> PutAllTags([FromBody]List<TagDataContract> inputList)
         {
-            if (!replacementTagsList.Any())
+            if (!inputList.Any())
             {
                 return new BadRequestObjectResult(
                     new InvalidOperationException("Tags list is empty"));
             }
             var tags = await ReadTags();
             var points = await ReadStorage(tags);
+            var replacementTagsList = inputList.Select(input => Tag.FromDataContract(input));
             var duplicateTags = replacementTagsList
                 .Select(tag => tag.Id)
                 .GroupBy(id => id)

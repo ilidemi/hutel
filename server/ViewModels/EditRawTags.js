@@ -66,8 +66,10 @@ class EditRawTags extends React.Component {
     });
     $.ajax({
       url: "/api/tags",
+      contentType: "application/json",
       dataType: "text",
-      method: "POST",
+      method: "PUT",
+      data: this.state.value,
       success: function() {
         this.setState({
           errorText: "",
@@ -131,7 +133,7 @@ class EditRawTags extends React.Component {
                   floatingLabelFixed={true}
                   fullWidth={true}
                   value={this.state.value}
-                  onChange={this.handleChange}
+                  onChange={this.handleChange.bind(this)}
                 />
                 <RaisedButton
                   label="Submit"
