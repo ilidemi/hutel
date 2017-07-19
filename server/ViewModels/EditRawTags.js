@@ -110,6 +110,11 @@ class EditRawTags extends React.Component {
     const buttonStyle = {
       margin: 8
     };
+    const textareaStyle = {
+      fontFamily: "'Roboto Mono', monospace",
+      fontSize: "14px",
+      lineHeight: "normal"
+    }
 
     return (
       <div>
@@ -132,6 +137,7 @@ class EditRawTags extends React.Component {
                   floatingLabelText="Tags"
                   floatingLabelFixed={true}
                   fullWidth={true}
+                  textareaStyle={textareaStyle}
                   value={this.state.value}
                   onChange={this.handleChange.bind(this)}
                 />
