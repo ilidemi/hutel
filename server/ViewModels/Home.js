@@ -15,7 +15,7 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import * as Constants from './Constants'
 import PointHistory from './PointHistory';
 import SelectTag from './SelectTag';
-import PointInput from './PointInput';
+import SubmitPoint from './SubmitPoint';
 
 class Home extends React.Component {
   constructor(){
@@ -123,6 +123,14 @@ class Home extends React.Component {
     });
   }
 
+  onLeftIconClick() {
+    this.props.history.push('/');
+  }
+
+  onEditRawTagsClick() {
+    this.props.history.push('/edit/tags');
+  }
+
   render() {
     const theme = this.props.theme;
     var selectTagStyle = {
@@ -137,23 +145,20 @@ class Home extends React.Component {
       selectTag={this.selectTag.bind(this)}
       theme={theme}
     />;
-    var pointInput = <PointInput
+    var pointInput = <SubmitPoint
       loading={this.state.pointInputLoading}
       tag={this.state.tags.find(tag => tag.id === this.state.selectedTagId)}
       resetTag={this.resetTag.bind(this)}
       submitPoint={this.submitPoint.bind(this)}
       theme={theme}
     />;
-    var props = this.props;
-    function navigateHome() {
-      props.history.push('/');
-    }
+
     return (
       <div>
         <MuiThemeProvider muiTheme={theme.headerMuiTheme}>
           <AppBar
             title="Human Telemetry"
-            onLeftIconButtonTouchTap={navigateHome} // TODO: doesn't work as intended
+            onLeftIconButtonTouchTap={this.onLeftIconClick.bind(this)} // TODO: doesn't work as intended
             iconElementRight={
               <IconMenu
                 iconButtonElement={
@@ -162,7 +167,10 @@ class Home extends React.Component {
                 targetOrigin={{horizontal: 'right', vertical: 'top'}}
                 anchorOrigin={{horizontal: 'right', vertical: 'top'}}
               >
-                <MenuItem primaryText="Edit raw tags" />
+                <MenuItem
+                  primaryText="Edit raw tags"
+                  onTouchTap={this.onEditRawTagsClick.bind(this)}
+                />
                 <MenuItem primaryText="Edit raw points" />
               </IconMenu>
             }

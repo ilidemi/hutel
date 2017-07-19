@@ -8,6 +8,7 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Paper from 'material-ui/Paper';
 
+import EditRawTags from './EditRawTags';
 import Home from './Home';
 
 injectTapEventPlugin();
@@ -49,6 +50,11 @@ const App = () => {
           <div>
             <Route exact path="/" render={(props) => (
               <Home {...props} theme={theme} />
+            )} />
+          </div>
+          <div>
+            <Route exact path="/edit/tags" render={(props) => (
+              <EditRawTags {...props} theme={theme} />
             )} />
           </div>
         </Paper>

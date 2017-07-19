@@ -3,10 +3,10 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import update from 'immutability-helper';
 
-import FlatButton from 'material-ui/FlatButton'
-import FontIcon from 'material-ui/FontIcon'
+import FlatButton from 'material-ui/FlatButton';
+import FontIcon from 'material-ui/FontIcon';
 import LinearProgress from 'material-ui/LinearProgress';
-import RaisedButton from 'material-ui/RaisedButton'
+import RaisedButton from 'material-ui/RaisedButton';
 
 import * as Constants from './Constants';
 import IntInput from './FieldInput/IntInput';
@@ -16,7 +16,7 @@ import DateInput from './FieldInput/DateInput';
 import TimeInput from './FieldInput/TimeInput';
 import EnumInput from './FieldInput/EnumInput';
 
-class PointInput extends React.Component {
+class SubmitPoint extends React.Component {
   constructor(props) {
     super(props);
 
@@ -84,7 +84,7 @@ class PointInput extends React.Component {
       }
       var InputComponent = this.inputComponentsMap[field.type];
       return (
-        <div>
+        <div key={field.name}>
           <InputComponent
             field={field}
             onSuccessfulParse={this.updatePointField.bind(this, fieldName)}
@@ -149,7 +149,7 @@ class PointInput extends React.Component {
   }
 }
 
-PointInput.propTypes = {
+SubmitPoint.propTypes = {
   loading: PropTypes.bool,
   tag: PropTypes.object,
   resetTag: PropTypes.func,
@@ -157,4 +157,4 @@ PointInput.propTypes = {
   theme: PropTypes.object
 };
 
-export default PointInput;
+export default SubmitPoint;
