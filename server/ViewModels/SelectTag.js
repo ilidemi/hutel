@@ -35,6 +35,7 @@ class SelectTag extends React.Component {
       }
       var buttons = this.props.tags.map(tag => (
         <RaisedButton
+          key={tag.id}
           onClick={this.selectTag.bind(this, tag.id)}
           label={tag.id}
           labelStyle={labelStyle}

@@ -9,6 +9,8 @@
     "babel-preset-es2015": "^6.16.0",
     "babel-preset-react": "^6.16.0",
     "css-loader": "^0.25.0",
+    "eslint": "^4.2.0",
+    "eslint-plugin-react": "^7.1.0",
     "extract-text-webpack-plugin": "^2.1.0",
     "file-loader": "^0.9.0",
     "immutability-helper": "^2.1.2",
@@ -18,6 +20,7 @@
     "prop-types": "^15.5.7",
     "react": "^15.5.3",
     "react-dom": "^15.5.3",
+    "react-router-dom": "^4.1.1",
     "react-tap-event-plugin": "^2.0.1",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7"

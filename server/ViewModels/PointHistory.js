@@ -67,6 +67,7 @@ class PointHistory extends React.Component {
             var secondaryText = fieldTexts.join("  ");
             return (
               <ListItem
+                key={point.id}
                 primaryText={point.tagId.toUpperCase()}
                 secondaryText={secondaryText}
                 disabled={true}
@@ -75,9 +76,9 @@ class PointHistory extends React.Component {
             );
           });
           return [
-            <Subheader style={dateStyle}>{this.humanizeDate(date)}</Subheader>,
+            <Subheader key={date} style={dateStyle}>{this.humanizeDate(date)}</Subheader>,
             ...dateItems,
-            <Divider />
+            <Divider key={date + '-divider'} />
           ];
         });
       return (
