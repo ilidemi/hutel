@@ -6,6 +6,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using hutel.Session;
 using hutel.Storage;
 
@@ -24,12 +25,14 @@ namespace hutel.Middleware
         private readonly string _clientId;
         private readonly string _clientSecret;
         private readonly RequestDelegate _next;
+        private readonly ILogger _logger;
         private readonly ISessionClient _sessionClient;
         private readonly GoogleTokenClient _tokenClient;
     
-        public GoogleAuthMiddleware(RequestDelegate next)
+        public GoogleAuthMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
         {
             _next = next;
+            _logger = loggerFactory.CreateLogger<GoogleAuthMiddleware>();
             _clientId = Environment.GetEnvironmentVariable(_envGoogleClientId);
             _clientSecret = Environment.GetEnvironmentVariable(_envGoogleClientSecret);
             _sessionClient = new GoogleSessionClient();
@@ -89,6 +92,10 @@ namespace hutel.Middleware
             }
             if (!httpContext.Request.Cookies.ContainsKey(_sessionCookieKey))
             {
+                _logger.LogInformation(
+                    LoggingEvents.SESSION_EXPIRED,
+                    null,
+                    "No session id in cookie, redirecting to auth");
                 httpContext.Response.Redirect(authEndpoint);
                 return;
             }
@@ -96,12 +103,22 @@ namespace hutel.Middleware
             var session = await _sessionClient.LookupSessionAsync(sessionId);
             if (session == null)
             {
+                _logger.LogInformation(
+                    LoggingEvents.SESSION_EXPIRED,
+                    null,
+                    "No session in datastore, redirecting to auth");
                 httpContext.Response.Redirect(authEndpoint);
                 return;
             }
             var authEndpointWithHint = authEndpoint + $"&login_hint={session.UserId}";
             if (session.Expiration < DateTime.UtcNow)
             {
+                _logger.LogInformation(
+                    LoggingEvents.SESSION_EXPIRED,
+                    null,
+                    "Session expiration time: {0}, now: {1}, redirecting to auth",
+                    session.Expiration,
+                    DateTime.UtcNow);
                 await _sessionClient.DeleteSessionAsync(session.SessionId);
                 httpContext.Response.Redirect(authEndpointWithHint);
                 return;
@@ -109,17 +126,32 @@ namespace hutel.Middleware
             var token = await _tokenClient.GetAsync(session.UserId);
             if (token == null)
             {
+                _logger.LogInformation(
+                    LoggingEvents.SESSION_EXPIRED,
+                    null,
+                    "Token is null, redirecting to auth");
                 httpContext.Response.Redirect(authEndpointWithHint);
                 return;
             }
             if (session.Expiration < DateTime.UtcNow + _expirationTimeThreshold)
             {
+                _logger.LogInformation(
+                    LoggingEvents.SESSION_EXPIRED,
+                    null,
+                    "Session expiration time: {0}, threshold: {1}, renewing the expiration time without redirect",
+                    session.Expiration,
+                    DateTime.UtcNow + _expirationTimeThreshold);
                 session.Expiration = DateTime.UtcNow + _expirationTime;
                 await _sessionClient.SaveSessionAsync(session);
             }
             httpContext.Items["UserId"] = session.UserId;
             await _next.Invoke(httpContext);
         }
+    }
+
+    public class LoggingEvents
+    {
+        public const int SESSION_EXPIRED = 1000;
     }
     
     public static class GoogleAuthMiddlewareExtensions
