@@ -1,7 +1,7 @@
 import React from 'react';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 
-import { BrowserRouter, Route } from 'react-router-dom';
+import { HashRouter, Route } from 'react-router-dom';
 
 import * as Colors from 'material-ui/styles/colors';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
@@ -41,7 +41,7 @@ const App = () => {
     flexMinHeight: "100%"
   };
   return (
-    <BrowserRouter>
+    <HashRouter>
       <MuiThemeProvider muiTheme={muiTheme}>
         <Paper
           style={columnStyle}
@@ -59,7 +59,7 @@ const App = () => {
           </div>
         </Paper>
       </MuiThemeProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 };
 
