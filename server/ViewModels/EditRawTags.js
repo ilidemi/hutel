@@ -103,9 +103,11 @@ class EditRawTags extends React.Component {
 
   render() {
     const style = {
-      padding: 10,
+      padding: "8px 24px",
       display: "flex",
       flexWrap: "wrap",
+      width: "100%",
+      boxSizing: "border-box"
     };
     const buttonStyle = {
       margin: 8
@@ -125,13 +127,14 @@ class EditRawTags extends React.Component {
             onLeftIconButtonTouchTap={this.redirectHome.bind(this)}
           />
         </MuiThemeProvider>
-        <div style={style}>
           {
             this.state.loading
             ?
-              <LinearProgress mode="indeterminate" />
+              <div style={style}>
+                <LinearProgress mode="indeterminate" />
+              </div>
             :
-              <div>
+              <div style={style}>
                 <TextField
                   multiLine={true}
                   floatingLabelText="Tags"
@@ -151,7 +154,6 @@ class EditRawTags extends React.Component {
                 />
               </div>
           }
-        </div>
       </div>
     );
   }
