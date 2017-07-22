@@ -80,7 +80,13 @@ namespace hutel.Middleware
                         Expiration = DateTime.UtcNow + _expirationTime
                     };
                     await _sessionClient.SaveSessionAsync(newSession);
-                    httpContext.Response.Cookies.Append(_sessionCookieKey, newSession.SessionId);
+                    httpContext.Response.Cookies.Append(
+                        _sessionCookieKey,
+                        newSession.SessionId,
+                        new CookieOptions
+                        {
+                            Expires = new DateTimeOffset(newSession.Expiration)
+                        });
                     httpContext.Response.Redirect("/");
                     return;
                 }
@@ -143,6 +149,13 @@ namespace hutel.Middleware
                     DateTime.UtcNow + _expirationTimeThreshold);
                 session.Expiration = DateTime.UtcNow + _expirationTime;
                 await _sessionClient.SaveSessionAsync(session);
+                httpContext.Response.Cookies.Append(
+                    _sessionCookieKey,
+                    session.SessionId,
+                    new CookieOptions
+                    {
+                        Expires = new DateTimeOffset(session.Expiration)
+                    });
             }
             httpContext.Items["UserId"] = session.UserId;
             await _next.Invoke(httpContext);
