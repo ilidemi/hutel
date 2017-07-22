@@ -12,7 +12,7 @@ import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import TextField from 'material-ui/TextField';
 
-class EditRawTags extends React.Component {
+class EditRawData extends React.Component {
   constructor() {
     super();
     this.state = {
@@ -23,10 +23,10 @@ class EditRawTags extends React.Component {
   }
 
   componentDidMount() {
-    this.updateTags();
+    this.updateData();
   }
 
-  updateTags() {
+  updateData() {
     this.setState({
       loading: true,
       submitButtonEnabled: false
@@ -34,7 +34,7 @@ class EditRawTags extends React.Component {
       console.log(this.state);
     });
     $.ajax({
-      url: "/api/tags",
+      url: this.props.url,
       dataType: "text",
       cache: false,
       success: function(data) {
@@ -58,14 +58,14 @@ class EditRawTags extends React.Component {
     });
   }
 
-  submitTags() {
+  submitData() {
     this.setState({
       loading: true
     }, function() {
       console.log(this.state);
     });
     $.ajax({
-      url: "/api/tags",
+      url: this.props.url,
       contentType: "application/json",
       dataType: "text",
       method: "PUT",
@@ -122,7 +122,7 @@ class EditRawTags extends React.Component {
       <div>
         <MuiThemeProvider muiTheme={this.props.theme.headerMuiTheme}>
           <AppBar
-            title="Edit Raw Tags"
+            title={this.props.title}
             iconElementLeft={<IconButton><NavigationArrowBack /></IconButton>}
             onLeftIconButtonTouchTap={this.redirectHome.bind(this)}
           />
@@ -137,7 +137,7 @@ class EditRawTags extends React.Component {
               <div style={style}>
                 <TextField
                   multiLine={true}
-                  floatingLabelText="Tags"
+                  floatingLabelText={this.props.floatingLabel}
                   floatingLabelFixed={true}
                   fullWidth={true}
                   textareaStyle={textareaStyle}
@@ -150,7 +150,7 @@ class EditRawTags extends React.Component {
                   primary={true}
                   icon={<FontIcon className="material-icons">send</FontIcon>}
                   style={buttonStyle}
-                  onClick={this.submitTags.bind(this)}
+                  onClick={this.submitData.bind(this)}
                 />
               </div>
           }
@@ -159,9 +159,12 @@ class EditRawTags extends React.Component {
   }
 }
 
-EditRawTags.propTypes = {
+EditRawData.propTypes = {
   theme: PropTypes.object,
-  history: PropTypes.object
+  history: PropTypes.object,
+  url: PropTypes.string,
+  title: PropTypes.string,
+  floatingLabel: PropTypes.string
 }
 
-export default EditRawTags;
+export default EditRawData;

@@ -131,6 +131,10 @@ class Home extends React.Component {
     this.props.history.push('/edit/tags');
   }
 
+  onEditRawPointsClick() {
+    this.props.history.push('/edit/points');
+  }
+
   render() {
     const theme = this.props.theme;
     var selectTagStyle = {
@@ -171,7 +175,10 @@ class Home extends React.Component {
                   primaryText="Edit raw tags"
                   onTouchTap={this.onEditRawTagsClick.bind(this)}
                 />
-                <MenuItem primaryText="Edit raw points" />
+                <MenuItem
+                  primaryText="Edit raw points"
+                  onTouchTap={this.onEditRawPointsClick.bind(this)}
+                />
               </IconMenu>
             }
           />
