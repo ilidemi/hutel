@@ -8,4 +8,4 @@ WORKDIR /app
 # RUN ["dotnet", "build"]
 EXPOSE 5000/tcp
 # CMD ["dotnet", "run", "--server.urls", "http://*:5000"]
-CMD ["dotnet", ".\server.dll", "--server.urls", "http://*:5000"]
+ENTRYPOINT ["dotnet", ".\server.dll", "--server.urls", "http://*:5000"]
