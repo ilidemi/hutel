@@ -32,10 +32,13 @@
   <ItemGroup>
     <Content Include="Views\**\*" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="wwwroot\**\*" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="tags.json" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="storage.json" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Dockerfile" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
+  <Target Name="CopyTags" AfterTargets="Build">
+    <Copy SourceFiles="tags.json"
+        DestinationFolder="$(PublishDir)"
+        Condition="Exists('tags.json')"/>
+  </Target>
   <Target Name="RunWebpackDev" AfterTargets="Build">
     <Exec Command="npm install"/>
     <Exec Command="node node_modules/webpack/bin/webpack.js --config webpack.config.vendor.js --env.dev"/>
