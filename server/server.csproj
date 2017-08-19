@@ -9,11 +9,11 @@
     <PackageId>server</PackageId>
     <RuntimeFrameworkVersion>1.0.4</RuntimeFrameworkVersion>
     <PackageTargetFallback>$(PackageTargetFallback);dotnet5.4;portable-net451+win8</PackageTargetFallback>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="1.0.2"/>
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="1.0.2"/>
-    <PackageReference Include="Microsoft.AspNetCore.Server.IISIntegration" Version="1.0.2"/>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.0.2"/>
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="1.0.2"/>
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.0.2"/>
@@ -27,6 +27,13 @@
     <PackageReference Include="Google.Cloud.Datastore.V1" Version="1.0.0"/>
     <PackageReference Include="Google.Cloud.Storage.V1" Version="1.0.0-beta07"/>
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.0.0"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="wwwroot\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="tags.json" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="storage.json" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Dockerfile" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="RunWebpackDev" AfterTargets="Build">
     <Exec Command="npm install"/>
