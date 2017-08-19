@@ -1,32 +1,40 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <DebugType>portable</DebugType>
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <AssemblyName>server</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>server</PackageId>
-    <RuntimeFrameworkVersion>1.0.4</RuntimeFrameworkVersion>
-    <PackageTargetFallback>$(PackageTargetFallback);dotnet5.4;portable-net451+win8</PackageTargetFallback>
+    <RuntimeFrameworkVersion>2.0.0</RuntimeFrameworkVersion>
+    <AssetTargetFallback>$(AssetTargetFallback);dotnet5.4;portable-net451+win8</AssetTargetFallback>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+    <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="1.0.2"/>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="1.0.2"/>
-    <PackageReference Include="Microsoft.AspNetCore.Server.IISIntegration" Version="1.0.2"/>
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.0.2"/>
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="1.0.2"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.0.2"/>
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="1.0.2"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="1.0.2"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="1.0.2"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.0.2"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="1.0.2"/>
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.0.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.0.0"/>
     <PackageReference Include="Google.Apis.Drive.v2" Version="1.25.0.858"/>
     <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.25.0.844"/>
     <PackageReference Include="Google.Cloud.Datastore.V1" Version="1.0.0"/>
     <PackageReference Include="Google.Cloud.Storage.V1" Version="1.0.0-beta07"/>
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.0.0"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="wwwroot\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="tags.json" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="storage.json" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Dockerfile" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="RunWebpackDev" AfterTargets="Build">
     <Exec Command="npm install"/>
