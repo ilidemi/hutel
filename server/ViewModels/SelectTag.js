@@ -66,7 +66,8 @@ class SelectTag extends React.Component {
               style={iconStyle}
             >
               add
-            </FontIcon>}
+            </FontIcon>
+          }
         />
       );
       var expandButton =
@@ -81,7 +82,8 @@ class SelectTag extends React.Component {
               style={iconStyle}
             >
               expand_more
-            </FontIcon>}
+            </FontIcon>
+          }
         />
       var collapseButton =
         <RaisedButton
@@ -95,7 +97,8 @@ class SelectTag extends React.Component {
               style={iconStyle}
             >
               expand_less
-            </FontIcon>}
+            </FontIcon>
+          }
         />
       var buttons = this.state.isExpanded
         ? this.props.tags.map(toButton).concat([collapseButton])
