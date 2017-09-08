@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import moment from 'moment'
 
 import Divider from 'material-ui/Divider';
-import LinearProgress from 'material-ui/LinearProgress';
 import {List, ListItem} from 'material-ui/List';
 import Subheader from 'material-ui/Subheader';
 
@@ -33,15 +32,11 @@ class PointHistory extends React.Component {
       padding: 10,
       display: "flex",
       flexGrow: 1,
-      flexDirection: "column"
+      flexDirection: "column",
+      background: this.props.theme.historyBackground
     };
-    if (this.props.loading) {
-      return (
-        <div style={style}>
-          <LinearProgress mode="indeterminate" />
-        </div>
-      );
-    } else if (this.props.points.length === 0) {
+    
+    if (this.props.points.length === 0) {
       return (
         <div style={style}>
           <h2>History is empty</h2>
@@ -93,7 +88,6 @@ class PointHistory extends React.Component {
 }
 
 PointHistory.propTypes = {
-  loading: PropTypes.bool,
   points: PropTypes.array.isRequired,
   theme: PropTypes.object
 }

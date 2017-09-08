@@ -1,11 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import moment from 'moment';
 import update from 'immutability-helper';
 
-import FlatButton from 'material-ui/FlatButton';
+import $ from 'jquery';
+import moment from 'moment';
+
+import AppBar from 'material-ui/AppBar'
+import Divider from 'material-ui/Divider';
 import FontIcon from 'material-ui/FontIcon';
+import IconButton from 'material-ui/IconButton';
 import LinearProgress from 'material-ui/LinearProgress';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import RaisedButton from 'material-ui/RaisedButton';
 
 import * as Constants from './Constants';
@@ -15,6 +21,7 @@ import StringInput from './FieldInput/StringInput';
 import DateInput from './FieldInput/DateInput';
 import TimeInput from './FieldInput/TimeInput';
 import EnumInput from './FieldInput/EnumInput';
+import PointHistory from './PointHistory';
 
 class SubmitPoint extends React.Component {
   constructor(props) {
@@ -52,7 +59,8 @@ class SubmitPoint extends React.Component {
     this.state = {
       fullTag: fullTag,
       visibleFields: visibleFieldNames,
-      point: point
+      point: point,
+      loading: false
     };
   }
 
@@ -65,15 +73,41 @@ class SubmitPoint extends React.Component {
       }));
   }
 
-  resetTag() {
-    this.props.resetTag();
+  goBack() {
+    this.props.history.goBack();
   }
-
-  submitPoint() {
+  
+  submitPoint(point) {
+    console.log("Submitting point", point);
     if (Object.values(this.state.point).some(value => value === null)) {
       return;
     }
-    this.props.submitPoint(this.state.point)
+    this.setState({loading: true}, function() {
+      console.log(this.state);
+    });
+    $.ajax({
+      url: "/api/points",
+      dataType: "json",
+      contentType:"application/json; charset=utf-8",
+      method: "POST",
+      data: JSON.stringify(this.state.point),
+      success: function(data) {
+        console.log(data);
+        this.setState({loading: false}, function() {
+          console.log(this.state);
+        });
+        this.props.updatePoints();
+        this.goBack();
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.log(err);
+        this.resetTag();
+        this.setState({pointInputLoading: false}, function() {
+          console.log(this.state);
+        });
+        this.goBack();
+      }.bind(this)
+    });
   }
 
   render() {
@@ -96,7 +130,8 @@ class SubmitPoint extends React.Component {
     const style = {
       padding: "10px",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      background: this.props.theme.topBackground
     };
     const marginStyle = {
       marginLeft: 8,
@@ -104,57 +139,57 @@ class SubmitPoint extends React.Component {
     };
     const titleStyle = {
       textTransform: "uppercase",
+      fontSize: "20px",
+      fontWeight: "500"
     };
     const buttonStyle = {
       margin: 8
     };
-    var loadingIndicator = this.props.loading
+    var loadingIndicator = this.state.loading
       ? <LinearProgress mode="indeterminate" />
       : null;
     return (
-      <div style={style}>
-        <div>
-          <FlatButton
-            label="Back"
-            icon={
-              <FontIcon className="material-icons">
-                arrow_back
-              </FontIcon>}
-            style={buttonStyle}
-            onClick={this.resetTag.bind(this)}
+      <div>
+        <MuiThemeProvider muiTheme={this.props.theme.headerMuiTheme}>
+          <AppBar
+            title={this.props.tag.id}
+            titleStyle={titleStyle}
+            iconElementLeft={<IconButton><NavigationArrowBack /></IconButton>}
+            onLeftIconButtonTouchTap={this.goBack.bind(this)}
           />
+        </MuiThemeProvider>
+        <Divider />
+        <div style={style}>
+          <div style={marginStyle}>
+            {fieldInputs}
+          </div>
+          <div>
+            <RaisedButton
+              label="Submit"
+              labelPosition="before"
+              primary={true}
+              icon={<FontIcon className="material-icons">send</FontIcon>}
+              style={buttonStyle}
+              onClick={this.submitPoint.bind(this)}
+            />
+          </div>
+          {loadingIndicator}
         </div>
-        <div style={marginStyle}>
-          <h1
-            className="mdc-typography--title"
-            style={titleStyle}
-          >
-            {this.props.tag.id}
-          </h1>
-          {fieldInputs}
-        </div>
-        <div>
-          <RaisedButton
-            label="Submit"
-            labelPosition="before"
-            primary={true}
-            icon={<FontIcon className="material-icons">send</FontIcon>}
-            style={buttonStyle}
-            onClick={this.submitPoint.bind(this)}
-          />
-        </div>
-        {loadingIndicator}
+        <PointHistory
+          points={this.props.points}
+          theme={this.props.theme}
+        />
       </div>
     );
   }
 }
 
 SubmitPoint.propTypes = {
-  loading: PropTypes.bool,
   tag: PropTypes.object,
-  resetTag: PropTypes.func,
-  submitPoint: PropTypes.func,
-  theme: PropTypes.object
+  points: PropTypes.array,
+  history: PropTypes.object,
+  theme: PropTypes.object,
+  updatePoints: PropTypes.func
 };
 
 export default SubmitPoint;

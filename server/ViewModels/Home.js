@@ -1,9 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import $ from 'jquery';
-import moment from 'moment';
-
 import AppBar from 'material-ui/AppBar'
 import Divider from 'material-ui/Divider';
 import IconButton from 'material-ui/IconButton';
@@ -12,119 +9,14 @@ import MenuItem from 'material-ui/MenuItem';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
-import * as Constants from './Constants'
 import PointHistory from './PointHistory';
 import SelectTag from './SelectTag';
-import SubmitPoint from './SubmitPoint';
 
 class Home extends React.Component {
-  constructor(){
+  constructor() {
     super();
     this.state = {
-      points: [],
-      tags: [],
-      selectedTagId: null,
-      selectTagLoading: true,
-      pointHistoryLoading: true,
-      pointInputLoading: false
     }
-  }
-
-  componentDidMount() {
-    this.updateHistory();
-    this.updateTags();
-  }
-
-  updateHistory() {
-    this.setState({pointHistoryLoading: true}, function(){
-      console.log(this.state);
-    });
-    $.ajax({
-      url: "/api/points",
-      data: {
-        startDate: moment().subtract(7, 'days').format(Constants.dateFormat)
-      },
-      dataType:'json',
-      cache: false,
-      success: function(data){
-        this.setState({points: data, pointHistoryLoading: false}, function(){
-          console.log(this.state);
-        });
-      }.bind(this),
-      error: function(xhr, status, err){
-        console.log(err);
-        this.setState({pointHistoryLoading: false}, function(){
-          console.log(this.state);
-        });
-      }.bind(this)
-    });
-  }
-
-  updateTags() {
-    this.setState({selectTagLoading: true}, function() {
-      console.log(this.state);
-    });
-    $.ajax({
-      url: "/api/tags",
-      dataType: "json",
-      cache: false,
-      success: function(data) {
-        this.setState({tags: data, selectTagLoading: false}, function() {
-          console.log(this.state);
-        });
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.log(err);
-        this.setState({selectTagLoading: false}, function() {
-          console.log(this.state);
-        });
-      }.bind(this)
-    });
-  }
-
-  selectTag(tagId) {
-    this.setState({selectedTagId: tagId}, function() {
-      console.log(this.state);
-    });
-  }
-
-  resetTag() {
-    this.setState({selectedTagId: null}, function() {
-      console.log(this.state);
-    });
-  }
-
-  submitPoint(point) {
-    console.log("Submitting point", point);
-    this.setState({pointInputLoading: true}, function() {
-      console.log(this.state);
-    });
-    $.ajax({
-      url: "/api/points",
-      dataType: "json",
-      contentType:"application/json; charset=utf-8",
-      method: "POST",
-      data: JSON.stringify(point),
-      success: function(data) {
-        console.log(data);
-        this.resetTag();
-        this.setState({pointInputLoading: false}, function() {
-          console.log(this.state);
-        });
-        this.updateHistory();
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.log(err);
-        this.resetTag();
-        this.setState({pointInputLoading: false}, function() {
-          console.log(this.state);
-        });
-      }.bind(this)
-    });
-  }
-
-  onLeftIconClick() {
-    this.props.history.push('/');
   }
 
   onEditRawTagsClick() {
@@ -136,33 +28,12 @@ class Home extends React.Component {
   }
 
   render() {
-    const theme = this.props.theme;
-    var selectTagStyle = {
-      background: theme.topBackground
-    }
-    var pointHistoryStyle = {
-      background: theme.historyBackground
-    }
-    var selectTag = <SelectTag
-      loading={this.state.selectTagLoading}
-      tags={this.state.tags}
-      selectTag={this.selectTag.bind(this)}
-      theme={theme}
-    />;
-    var pointInput = <SubmitPoint
-      loading={this.state.pointInputLoading}
-      tag={this.state.tags.find(tag => tag.id === this.state.selectedTagId)}
-      resetTag={this.resetTag.bind(this)}
-      submitPoint={this.submitPoint.bind(this)}
-      theme={theme}
-    />;
-
     return (
       <div>
-        <MuiThemeProvider muiTheme={theme.headerMuiTheme}>
+        <MuiThemeProvider muiTheme={this.props.theme.headerMuiTheme}>
           <AppBar
             title="Human Telemetry"
-            onLeftIconButtonTouchTap={this.onLeftIconClick.bind(this)} // TODO: doesn't work as intended
+            showMenuIconButton={false}
             iconElementRight={
               <IconMenu
                 iconButtonElement={
@@ -183,23 +54,24 @@ class Home extends React.Component {
             }
           />
         </MuiThemeProvider>
-        <div style={selectTagStyle}>
-          {this.state.selectedTagId === null ? selectTag : pointInput}
-        </div>
+        <SelectTag
+          tags={this.props.tags}
+          history={this.props.history}
+          theme={this.props.theme}
+        />
         <Divider />
-        <div style={pointHistoryStyle}>
-          <PointHistory
-            loading={this.state.pointHistoryLoading}
-            points={this.state.points}
-            theme={theme}
-          />
-        </div>
+        <PointHistory
+          points={this.props.points}
+          theme={this.props.theme}
+        />
       </div>
     );
   }
 }
 
 Home.propTypes = {
+  tags: PropTypes.array,
+  points: PropTypes.array,
   history: PropTypes.object,
   theme: PropTypes.object
 }

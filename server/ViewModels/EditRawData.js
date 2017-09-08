@@ -97,8 +97,8 @@ class EditRawData extends React.Component {
     });
   }
 
-  redirectHome() {
-    this.props.history.push('/');
+  goBack() {
+    this.props.history.goBack();
   }
 
   render() {
@@ -124,7 +124,7 @@ class EditRawData extends React.Component {
           <AppBar
             title={this.props.title}
             iconElementLeft={<IconButton><NavigationArrowBack /></IconButton>}
-            onLeftIconButtonTouchTap={this.redirectHome.bind(this)}
+            onLeftIconButtonTouchTap={this.goBack.bind(this)}
           />
         </MuiThemeProvider>
           {
