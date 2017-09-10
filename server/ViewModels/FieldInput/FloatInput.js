@@ -9,7 +9,7 @@ class FloatInput extends React.Component {
     this.state = {
       value : this.props.field.defaultValue || "",
       validationMessage: ""
-    }
+    };
   }
 
   onBlur(e) {
@@ -55,6 +55,6 @@ FloatInput.propTypes = {
   field: PropTypes.object,
   onSuccessfulParse: PropTypes.func,
   theme: PropTypes.object
-}
+};
 
 export default FloatInput;

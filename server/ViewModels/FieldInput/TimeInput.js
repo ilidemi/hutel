@@ -4,7 +4,7 @@ import moment from 'moment';
 
 import TextField from 'material-ui/TextField';
 
-import * as Constants from '../Constants'
+import * as Constants from '../Constants';
 
 class TimeInput extends React.Component {
   constructor(props) {
@@ -13,7 +13,7 @@ class TimeInput extends React.Component {
       value : this.props.field.defaultValue
         ? moment(this.props.field.defaultValue, Constants.timeFormat)
         : null
-    }
+    };
   }
   
   onBlur(e) {
@@ -58,6 +58,6 @@ TimeInput.propTypes = {
   field: PropTypes.object,
   onSuccessfulParse: PropTypes.func,
   theme: PropTypes.object
-}
+};
 
 export default TimeInput;

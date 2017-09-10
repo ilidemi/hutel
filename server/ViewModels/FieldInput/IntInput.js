@@ -55,6 +55,6 @@ IntInput.propTypes = {
   field: PropTypes.object,
   onSuccessfulParse: PropTypes.func,
   theme: PropTypes.object
-}
+};
 
 export default IntInput;

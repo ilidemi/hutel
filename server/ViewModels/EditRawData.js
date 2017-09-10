@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import $ from 'jquery';
 
-import AppBar from 'material-ui/AppBar'
+import AppBar from 'material-ui/AppBar';
 import FontIcon from 'material-ui/FontIcon';
 import IconButton from 'material-ui/IconButton';
 import LinearProgress from 'material-ui/LinearProgress';
@@ -106,7 +106,7 @@ class EditRawData extends React.Component {
       fontFamily: "'Roboto Mono', monospace",
       fontSize: "14px",
       lineHeight: "normal"
-    }
+    };
 
     return (
       <div>
@@ -155,6 +155,6 @@ EditRawData.propTypes = {
   url: PropTypes.string,
   title: PropTypes.string,
   floatingLabel: PropTypes.string
-}
+};
 
 export default EditRawData;

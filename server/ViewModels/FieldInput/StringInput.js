@@ -9,12 +9,12 @@ class StringInput extends React.Component {
     this.state = {
       value : this.props.field.defaultValue || "",
       validationMessage: ""
-    }
+    };
   }
 
   onBlur(e) {
     var value = e.target.value;
-    var success = !!value.length
+    var success = !!value.length;
     var validationMessage = success ? "" : "value cannot be empty";
     this.setState({
       value: value,
@@ -53,6 +53,6 @@ StringInput.propTypes = {
   field: PropTypes.object,
   onSuccessfulParse: PropTypes.func,
   theme: PropTypes.object
-}
+};
 
 export default StringInput;

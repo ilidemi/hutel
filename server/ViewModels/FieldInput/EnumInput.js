@@ -9,7 +9,7 @@ class EnumInput extends React.Component {
     this.state = {
       value : this.props.field.defaultValue || "",
       validationMessage: ""
-    }
+    };
   }
 
   onBlur(e) {
@@ -24,6 +24,7 @@ class EnumInput extends React.Component {
     var radioButtons = this.props.field.values.map(value => {
       return (
       <RadioButton
+        key={value}
         label={value}
         value={value}
         style={radioButtonStyle} />
@@ -48,6 +49,6 @@ EnumInput.propTypes = {
   field: PropTypes.object,
   onSuccessfulParse: PropTypes.func,
   theme: PropTypes.object
-}
+};
 
 export default EnumInput;

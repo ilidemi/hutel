@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import moment from 'moment'
+import moment from 'moment';
 
 import Divider from 'material-ui/Divider';
 import {List, ListItem} from 'material-ui/List';
@@ -17,7 +17,7 @@ class PointHistory extends React.Component {
     var date = moment(value);
     var age = moment.duration(moment().diff(date));
     if (age.days() < 0) {
-      return "In the future"
+      return "In the future";
     } else if (age.days() == 0) {
       return "Today";
     } else if (age.days() == 1) {
@@ -90,6 +90,6 @@ class PointHistory extends React.Component {
 PointHistory.propTypes = {
   points: PropTypes.array.isRequired,
   theme: PropTypes.object
-}
+};
 
 export default PointHistory;

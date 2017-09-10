@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import AppBar from 'material-ui/AppBar'
+import AppBar from 'material-ui/AppBar';
 import LinearProgress from 'material-ui/LinearProgress';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
@@ -24,10 +24,10 @@ const Loading = ({theme}) => {
       </div>
     </div>
   );
-}
+};
 
 Loading.propTypes = {
   theme: PropTypes.object
-}
+};
 
 export default Loading;

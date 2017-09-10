@@ -41,10 +41,10 @@ class SelectTag extends React.Component {
     };
     const iconStyle = {
       fontSize: 20
-    }
+    };
     const labelStyle = {
       paddingLeft: 6
-    }
+    };
     var toButton = tag => (
       <RaisedButton
         key={'+' + tag.id}
@@ -77,7 +77,7 @@ class SelectTag extends React.Component {
             expand_more
           </FontIcon>
         }
-      />
+      />;
     var collapseButton =
       <RaisedButton
         key="collapse"
@@ -92,7 +92,7 @@ class SelectTag extends React.Component {
             expand_less
           </FontIcon>
         }
-      />
+      />;
     var buttons = this.state.isExpanded
       ? this.props.tags.map(toButton).concat(
           this.props.tags.length >= 10
@@ -114,6 +114,6 @@ SelectTag.propTypes = {
   tags: PropTypes.array.isRequired,
   history: PropTypes.object,
   theme: PropTypes.object
-}
+};
 
 export default SelectTag;

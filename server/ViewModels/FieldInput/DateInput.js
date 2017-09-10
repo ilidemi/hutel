@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import moment from 'moment'
+import moment from 'moment';
 
 import DatePicker from 'material-ui/DatePicker';
 import IconButton from 'material-ui/IconButton';
 
-import * as Constants from '../Constants'
+import * as Constants from '../Constants';
 
 class DateInput extends React.Component {
   constructor(props) {
@@ -52,10 +52,10 @@ class DateInput extends React.Component {
       display: "flex",
       flexDirection: "row",
       alignItems: "flex-end"
-    }
+    };
     const buttonStyle = {
       minWidth: 36
-    }
+    };
     return (
       <div style={style}>
         <DatePicker
@@ -88,6 +88,6 @@ DateInput.propTypes = {
   field: PropTypes.object,
   onSuccessfulParse: PropTypes.func,
   theme: PropTypes.object
-}
+};
 
 export default DateInput;
