@@ -30,64 +30,54 @@ class EditRawData extends React.Component {
     this.setState({
       loading: true,
       submitButtonEnabled: false
-    }, function() {
-      console.log(this.state);
-    });
-    $.ajax({
-      url: this.props.url,
-      dataType: "text",
-      cache: false,
-      success: function(data) {
-        this.setState({
-          value: data,
-          errorText: "",
-          loading: false,
-        }, function() {
-          console.log(this.state);
-        });
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.log(err);
-        this.setState({
-          loading: false,
-          errorText: "Loading error",
-        }, function() {
-          console.log(this.state);
-        });
-      }.bind(this)
+    }, () => {
+      $.ajax({
+        url: this.props.url,
+        dataType: "text",
+        cache: false,
+        success: (data) => {
+          this.setState({
+            value: data,
+            errorText: "",
+            loading: false,
+          });
+        },
+        error: (xhr, status, err) => {
+          console.error(err);
+          this.setState({
+            loading: false,
+            errorText: "Loading error",
+          });
+        }
+      });
     });
   }
 
   submitData() {
     this.setState({
       loading: true
-    }, function() {
-      console.log(this.state);
-    });
-    $.ajax({
-      url: this.props.url,
-      contentType: "application/json",
-      dataType: "text",
-      method: "PUT",
-      data: this.state.value,
-      success: function() {
-        this.setState({
-          errorText: "",
-          loading: false
-        }, function() {
-          console.log(this.state);
-        });
-        this.redirectHome();
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.log(err);
-        this.setState({
-          errorText: "Error",
-          loading: false
-        }, function() {
-          console.log(this.state);
-        });
-      }.bind(this)
+    },() => {
+      $.ajax({
+        url: this.props.url,
+        contentType: "application/json",
+        dataType: "text",
+        method: "PUT",
+        data: this.state.value,
+        success: () => {
+          this.setState({
+            errorText: "",
+            loading: false
+          });
+          this.redirectHome();
+        },
+        error: (xhr, status, err) => {
+          console.error(err);
+          this.setState({
+            errorText: "Error",
+            loading: false
+          });
+        }
+      });
     });
   }
 

@@ -82,31 +82,26 @@ class SubmitPoint extends React.Component {
     if (Object.values(this.state.point).some(value => value === null)) {
       return;
     }
-    this.setState({loading: true}, function() {
-      console.log(this.state);
-    });
-    $.ajax({
-      url: "/api/points",
-      dataType: "json",
-      contentType:"application/json; charset=utf-8",
-      method: "POST",
-      data: JSON.stringify(this.state.point),
-      success: function(data) {
-        console.log(data);
-        this.setState({loading: false}, function() {
-          console.log(this.state);
-        });
-        this.props.updatePoints();
-        this.goBack();
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.log(err);
-        this.resetTag();
-        this.setState({pointInputLoading: false}, function() {
-          console.log(this.state);
-        });
-        this.goBack();
-      }.bind(this)
+    this.setState({loading: true}, () => {
+      $.ajax({
+        url: "/api/points",
+        dataType: "json",
+        contentType:"application/json; charset=utf-8",
+        method: "POST",
+        data: JSON.stringify(this.state.point),
+        success: () => {
+          this.setState({loading: false}, () => {
+            this.props.updatePoints();
+            this.goBack();
+          });
+        },
+        error: (xhr, status, err) => {
+          console.error(err);
+          this.setState({loading: false}, () => {
+            this.goBack();
+          });
+        }
+      });
     });
   }
 

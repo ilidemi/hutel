@@ -35,49 +35,39 @@ class App extends React.Component {
   }
 
   updatePoints() {
-    this.setState({pointsLoading: true}, function(){
-      console.log(this.state);
-    });
-    $.ajax({
-      url: "/api/points",
-      data: {
-        startDate: moment().subtract(7, 'days').format(Constants.dateFormat)
-      },
-      dataType:'json',
-      cache: false,
-      success: function(data){
-        this.setState({points: data, pointsLoading: false}, function(){
-          console.log(this.state);
-        });
-      }.bind(this),
-      error: function(xhr, status, err){
-        console.log(err);
-        this.setState({pointsLoading: false}, function(){
-          console.log(this.state);
-        });
-      }.bind(this)
+    this.setState({pointsLoading: true}, () => {
+      $.ajax({
+        url: "/api/points",
+        data: {
+          startDate: moment().subtract(7, 'days').format(Constants.dateFormat)
+        },
+        dataType:'json',
+        cache: false,
+        success: (data) => {
+          this.setState({points: data, pointsLoading: false});
+        },
+        error: (xhr, status, err) => {
+          console.error(err);
+          this.setState({pointsLoading: false});
+        }
+      });
     });
   }
 
   updateTags() {
-    this.setState({tagsLoading: true}, function() {
-      console.log(this.state);
-    });
-    $.ajax({
-      url: "/api/tags",
-      dataType: "json",
-      cache: false,
-      success: function(data) {
-        this.setState({tags: data, tagsLoading: false}, function() {
-          console.log(this.state);
-        });
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.log(err);
-        this.setState({tagsLoading: false}, function() {
-          console.log(this.state);
-        });
-      }.bind(this)
+    this.setState({tagsLoading: true}, () => {
+      $.ajax({
+        url: "/api/tags",
+        dataType: "json",
+        cache: false,
+        success: (data) => {
+          this.setState({tags: data, tagsLoading: false});
+        },
+        error: (xhr, status, err) => {
+          console.log(err);
+          this.setState({tagsLoading: false});
+        }
+      });
     });
   }
 
