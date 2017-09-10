@@ -59,12 +59,18 @@ namespace hutel.Controllers
         }
 
         [HttpGet("/api/points")]
-        public async Task<IActionResult> GetAllPoints(string startDate)
+        public async Task<IActionResult> GetAllPoints(string startDate, string tagId, string tagIds)
         {
             var tags = await ReadTags();
             var points = await ReadStorage(tags);
+            var tagIdsList = tagIds != null
+                ? tagIds.Split(',')
+                : tagId != null
+                    ? new string[] { tagId }
+                    : tags.Keys.ToArray();
             var filteredPoints = points.Values
                     .Where(point => startDate == null || point.Date >= new HutelDate(startDate))
+                    .Where(point => tagIdsList.Contains(point.TagId))
                     .ToList();
             filteredPoints.Sort((p1, p2) => 
             {
