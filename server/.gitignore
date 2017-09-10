@@ -275,5 +275,9 @@ storage.json.bak
 tags.json
 tags.json.bak
 
+# Charts config
+charts.json
+charts.json.bak
+
 # Webpack bundle
 wwwroot/dist

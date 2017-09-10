@@ -217,6 +217,20 @@ namespace hutel.Controllers
             await WriteTags(tags);
             return Json(tags.Values);
         }
+        
+        [HttpGet("/api/charts")]
+        public async Task<IActionResult> GetAllCharts()
+        {
+            var chartsString = await _storageClient.ReadChartsAsStringAsync();
+            return Content(chartsString, "application/json");
+        }
+
+        [HttpPut("/api/charts")]
+        public async Task<IActionResult> PutAllCharts([FromBody] string chartsString)
+        {
+            await _storageClient.WriteChartsAsStringAsync(chartsString);
+            return Ok();
+        }
 
         private async Task<Dictionary<Guid, Point>> ReadStorage(Dictionary<string, Tag> tags)
         {

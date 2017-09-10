@@ -20,6 +20,8 @@ namespace hutel.Storage
         private const string PointsFileName = "storage.json";
         private const string TagsFileBaseName = "tags";
         private const string TagsFileName = "tags.json";
+        private const string ChartsFileBaseName = "charts";
+        private const string ChartsFileName = "charts.json";
         private const string FolderMimeType = "application/vnd.google-apps.folder";
         private const string JsonMimeType = "application/octet-stream";
         private readonly string _userId;
@@ -30,6 +32,8 @@ namespace hutel.Storage
         private DateTime? _pointsLastBackupDate;
         private string _tagsFileId;
         private DateTime? _tagsLastBackupDate;
+        private string _chartsFileId;
+        private DateTime? _chartsLastBackupDate;
         
         public GoogleDriveHutelStorageClient(string userId)
         {
@@ -67,6 +71,21 @@ namespace hutel.Storage
             await WriteFileAsStringAsync(_tagsFileId, data);
         }
 
+        public async Task<string> ReadChartsAsStringAsync()
+        {
+            await InitAsync();
+            Console.WriteLine("ReadChartsAsStringAsync");
+            return await ReadFileAsStringAsync(_chartsFileId);
+        }
+
+        public async Task WriteChartsAsStringAsync(string data)
+        {
+            await InitAsync();
+            Console.WriteLine("WriteChartsAsStringAsync");
+            await BackupChartsIfNeededAsync();
+            await WriteFileAsStringAsync(_chartsFileId, data);
+        }
+
         private async Task InitAsync()
         {
             if (_initialized)
@@ -86,20 +105,27 @@ namespace hutel.Storage
             _rootFolderId = rootFolder.Id;
             var pointsFileTask = GetOrCreateFileAsync(PointsFileName, null, _rootFolderId);
             var tagsFileTask = GetOrCreateFileAsync(TagsFileName, null, _rootFolderId);
+            var chartsFileTask = GetOrCreateFileAsync(ChartsFileName, null, _rootFolderId);
             var pointsLastBackupTask = FindLastBackupAsync(
                 PointsFileBaseName, PointsFileName, _rootFolderId);
             var tagsLastBackupTask = FindLastBackupAsync(
                 TagsFileBaseName, TagsFileName, _rootFolderId);
+            var chartsLastBackupTask = FindLastBackupAsync(
+                ChartsFileBaseName, ChartsFileName, _rootFolderId);
 
             var pointsFile = await pointsFileTask;
             var tagsFile = await tagsFileTask;
+            var chartsFile = await chartsFileTask;
             var pointsLastBackup = await pointsLastBackupTask;
             var tagsLastBackup = await tagsLastBackupTask;
+            var chartsLastBackup = await chartsLastBackupTask;
 
             _pointsFileId = pointsFile.Id;
             _tagsFileId = tagsFile.Id;
+            _chartsFileId = chartsFile.Id;
             _pointsLastBackupDate = pointsLastBackup?.CreatedDate;
             _tagsLastBackupDate = tagsLastBackup?.CreatedDate;
+            _chartsLastBackupDate = chartsLastBackup?.CreatedDate;
             _initialized = true;
         }
 
@@ -164,6 +190,17 @@ namespace hutel.Storage
                 var backupDateString = DateTime.Now.ToString("yyyy-MM-dd");
                 var backupFileName = $"{TagsFileBaseName}-{backupDateString}.json";
                 await CopyFileAsync(_tagsFileId, backupFileName);
+            }
+        }
+
+        private async Task BackupChartsIfNeededAsync()
+        {
+            if (!_chartsLastBackupDate.HasValue ||
+                (DateTime.UtcNow - _chartsLastBackupDate.Value).Days >= 1)
+            {
+                var backupDateString = DateTime.Now.ToString("yyyy-MM-dd");
+                var backupFileName = $"{ChartsFileBaseName}-{backupDateString}.json";
+                await CopyFileAsync(_chartsFileId, backupFileName);
             }
         }
 

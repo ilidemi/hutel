@@ -1,0 +1,9 @@
+[
+    {
+        "type": "bubble",
+        "tag": "run",
+        "field": "km",
+        "time": 3,
+        "timeUnit": "months"
+    }
+]
