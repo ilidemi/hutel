@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import AppBar from 'material-ui/AppBar'
+import AppBar from 'material-ui/AppBar';
 import Divider from 'material-ui/Divider';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
@@ -9,14 +9,13 @@ import MenuItem from 'material-ui/MenuItem';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
+import Charts from './Charts';
 import PointHistory from './PointHistory';
 import SelectTag from './SelectTag';
 
 class Home extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-    }
+  constructor(props) {
+    super(props);
   }
 
   onEditRawTagsClick() {
@@ -25,6 +24,10 @@ class Home extends React.Component {
 
   onEditRawPointsClick() {
     this.props.history.push('/edit/points');
+  }
+  
+  onEditRawChartsClick() {
+    this.props.history.push('/edit/charts');
   }
 
   render() {
@@ -50,6 +53,10 @@ class Home extends React.Component {
                   primaryText="Edit raw points"
                   onTouchTap={this.onEditRawPointsClick.bind(this)}
                 />
+                <MenuItem
+                  primaryText="Edit raw charts"
+                  onTouchTap={this.onEditRawChartsClick.bind(this)}
+                />
               </IconMenu>
             }
           />
@@ -58,6 +65,11 @@ class Home extends React.Component {
           tags={this.props.tags}
           history={this.props.history}
           theme={this.props.theme}
+        />
+        <Divider />
+        <Charts
+          charts={this.props.charts}
+          chartsPoints={this.props.chartsPoints}
         />
         <Divider />
         <PointHistory
@@ -72,8 +84,10 @@ class Home extends React.Component {
 Home.propTypes = {
   tags: PropTypes.array,
   points: PropTypes.array,
+  charts: PropTypes.array,
+  chartsPoints: PropTypes.array,
   history: PropTypes.object,
   theme: PropTypes.object
-}
+};
 
 export default Home;

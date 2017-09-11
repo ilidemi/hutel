@@ -5,7 +5,7 @@ import update from 'immutability-helper';
 import $ from 'jquery';
 import moment from 'moment';
 
-import AppBar from 'material-ui/AppBar'
+import AppBar from 'material-ui/AppBar';
 import Divider from 'material-ui/Divider';
 import FontIcon from 'material-ui/FontIcon';
 import IconButton from 'material-ui/IconButton';
@@ -91,7 +91,7 @@ class SubmitPoint extends React.Component {
         data: JSON.stringify(this.state.point),
         success: () => {
           this.setState({loading: false}, () => {
-            this.props.updatePoints();
+            this.props.notifyPointsChanged();
             this.goBack();
           });
         },
@@ -184,7 +184,7 @@ SubmitPoint.propTypes = {
   points: PropTypes.array,
   history: PropTypes.object,
   theme: PropTypes.object,
-  updatePoints: PropTypes.func
+  notifyPointsChanged: PropTypes.func
 };
 
 export default SubmitPoint;
