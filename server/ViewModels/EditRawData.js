@@ -68,7 +68,7 @@ class EditRawData extends React.Component {
             errorText: "",
             loading: false
           });
-          this.redirectHome();
+          this.goBack();
         },
         error: (xhr, status, err) => {
           console.error(err);
