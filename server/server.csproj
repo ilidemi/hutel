@@ -39,6 +39,11 @@
         DestinationFolder="$(PublishDir)"
         Condition="Exists('tags.json')"/>
   </Target>
+  <Target Name="CopyCharts" AfterTargets="Build">
+    <Copy SourceFiles="charts.json"
+        DestinationFolder="$(PublishDir)"
+        Condition="Exists('charts.json')"/>
+  </Target>
   <Target Name="RunWebpackDev" AfterTargets="Build">
     <Exec Command="npm install"/>
     <Exec Command="node node_modules/webpack/bin/webpack.js --config webpack.config.vendor.js --env.dev"/>
