@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using hutel.Filters;
 using hutel.Logic;
@@ -232,8 +234,9 @@ namespace hutel.Controllers
         }
 
         [HttpPut("/api/charts")]
-        public async Task<IActionResult> PutAllCharts([FromBody] string chartsString)
+        public async Task<IActionResult> PutAllCharts()
         {
+            var chartsString = await new StreamReader(this.Request.Body).ReadToEndAsync();
             await _storageClient.WriteChartsAsStringAsync(chartsString);
             return Ok();
         }
