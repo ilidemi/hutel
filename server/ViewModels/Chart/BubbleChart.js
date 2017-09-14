@@ -14,6 +14,10 @@ import * as Constants from '../Constants';
 class BubbleChart extends React.Component {
   constructor(props) {
     super(props);
+    this.fullWidth = 400;
+    this.fullHeight = 150;
+    this.margins = {top: 10, right: 10, bottom: 15, left: 20};
+    this.radius = 2.5;
   }
 
   componentDidMount() {
@@ -26,9 +30,8 @@ class BubbleChart extends React.Component {
 
   createBarChart() {
     const node = this.node;
-    const margin = {top: 20, right: 20, bottom: 30, left: 40, innerBottom: 5, innerLeft: 5};
-    const width = 800 - margin.left - margin.right;
-    const height = 300 - margin.top - margin.bottom;
+    const width = this.fullWidth - this.margins.left - this.margins.right;
+    const height = this.fullHeight - this.margins.top - this.margins.bottom;
 
     const startDate = moment()
       .startOf('day')
@@ -40,31 +43,32 @@ class BubbleChart extends React.Component {
 
     const xScale = scaleTime()
       .domain([startDate, endDate])
-      .range([margin.left, margin.left + width]);
+      .range([this.margins.left, this.margins.left + width]);
     
     const values = this.props.chartPoints.map(point => point[this.props.chart.field]);
     const yScale = scaleLinear()
       .domain([min(values), max(values)])
-      .range([margin.top + height, margin.top])
+      .range([this.margins.top + height, this.margins.top])
       .nice();
 
     var xAxis = axisBottom(xScale)
-      .tickSize(5)
-      .tickFormat(timeFormat('%b'))
-      .tickPadding(5);
+      .tickSizeInner(-height)
+      .tickSizeOuter(0)
+      .tickFormat(timeFormat('%b'));
 
     var yAxis = axisLeft(yScale)
-      .tickSize(5);
+      .tickSizeInner(-width)
+      .tickSizeOuter(0);
+      
+    select(node)
+      .append('g')
+      .attr('transform', `translate(${this.margins.left}, 0)`)
+      .call(yAxis);
 
     select(node)
       .append('g')
-      .attr('transform', `translate(0, ${margin.top + height})`)
+      .attr('transform', `translate(0, ${this.margins.top + height})`)
       .call(xAxis);
-    
-    select(node)
-      .append('g')
-      .attr('transform', `translate(${margin.left}, 0)`)
-      .call(yAxis);
 
     var group = select(node)
       .selectAll('g.bubble')
@@ -79,19 +83,38 @@ class BubbleChart extends React.Component {
     
     group
       .append('circle')
-      .attr('r', '5')
+      .attr('r', `${this.radius}`)
       .style('fill', this.props.chart.color);
   }
 
   render() {
     return (
-      <svg
-        ref={node => this.node = node}
-        style={{display: 'block'}}
-        width="100%"
-        viewBox="0 0 800 300"
-        preserveAspectRatio="xMidYMin meet">
-      </svg>
+      <div>
+        <style scoped dangerouslySetInnerHTML={{__html: `
+          path, line {
+            stroke-width: 1px;
+            shape-rendering: crispEdges;
+            vector-effect: non-scaling-stroke;
+          }
+          path.domain {
+            stroke: #9E9E9E;
+          }
+          .tick > line {
+            stroke: #E0E0E0;
+          }
+          text {
+            font-family: Roboto;
+            font-size: 8px;
+          }
+        `}} />
+        <svg
+          ref={node => this.node = node}
+          style={{display: 'block'}}
+          width="100%"
+          viewBox={`0 0 ${this.fullWidth} ${this.fullHeight}`}
+          preserveAspectRatio="xMidYMin meet">
+        </svg>
+      </div>
     );
   }
 }
