@@ -46,19 +46,23 @@ class BubbleChart extends React.Component {
       .range([this.margins.left, this.margins.left + width]);
     
     const values = this.props.chartPoints.map(point => point[this.props.chart.field]);
+    const minValue = min(values);
+    const maxValue = max(values);
     const yScale = scaleLinear()
-      .domain([min(values), max(values)])
+      .domain([minValue, maxValue])
       .range([this.margins.top + height, this.margins.top])
-      .nice();
+      .nice(Math.ceil(maxValue) - Math.floor(minValue));
 
     var xAxis = axisBottom(xScale)
       .tickSizeInner(-height)
       .tickSizeOuter(0)
-      .tickFormat(timeFormat('%b'));
+      .tickFormat(timeFormat('%b'))
+      .tickPadding(5);
 
     var yAxis = axisLeft(yScale)
       .tickSizeInner(-width)
-      .tickSizeOuter(0);
+      .tickSizeOuter(0)
+      .tickPadding(5);
       
     select(node)
       .append('g')
