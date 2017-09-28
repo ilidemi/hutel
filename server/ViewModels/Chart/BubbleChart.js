@@ -21,14 +21,14 @@ class BubbleChart extends React.Component {
   }
 
   componentDidMount() {
-    this.createBarChart();
+    this.createBubbleChart();
   }
 
   componentDidUpdate() {
-    this.createBarChart();
+    this.createBubbleChart();
   }
 
-  createBarChart() {
+  createBubbleChart() {
     const node = this.node;
     const width = this.fullWidth - this.margins.left - this.margins.right;
     const height = this.fullHeight - this.margins.top - this.margins.bottom;
