@@ -1,13 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import moment from 'moment';
-
 import { min, max } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { scaleLinear, scaleTime } from 'd3-scale';
 import { select } from 'd3-selection';
 import { timeFormat } from 'd3-time-format';
+import moment from 'moment';
 
 import * as Constants from '../Constants';
 
