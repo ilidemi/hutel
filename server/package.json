@@ -13,6 +13,7 @@
     "d3-axis": "^1.0.8",
     "d3-scale": "^1.0.6",
     "d3-selection": "^1.1.0",
+    "d3-time": "^1.0.7",
     "d3-time-format": "^2.0.5",
     "eslint": "^4.2.0",
     "eslint-plugin-react": "^7.1.0",

@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import BubbleChart from './Chart/BubbleChart';
+import CalendarChart from './Chart/CalendarChart';
 
 const Charts = (props) => { 
   if (!props.charts || !props.charts.length) {
@@ -15,6 +16,14 @@ const Charts = (props) => {
             case 'bubble': 
               return (
                 <BubbleChart
+                  chart={chart}
+                  chartPoints={props.chartsPoints[index]}
+                  key={index}
+                />
+              );
+            case 'calendar':
+              return (
+                <CalendarChart
                   chart={chart}
                   chartPoints={props.chartsPoints[index]}
                   key={index}
