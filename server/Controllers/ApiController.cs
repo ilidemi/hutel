@@ -18,7 +18,6 @@ namespace hutel.Controllers
 {
     public class ApiController : Controller
     {
-        private readonly IMemoryCache _memoryCache;
         private readonly ILogger _logger;
         private readonly Lazy<IHutelStorageClient> _storageClientLazy;
         private IHutelStorageClient _storageClient
@@ -57,7 +56,6 @@ namespace hutel.Controllers
                     new FileHutelStorageClient(new LocalFileStorageClient()));
             }
             _logger = logger;
-            _memoryCache = memoryCache;
         }
 
         [HttpGet("/api/points")]
@@ -244,10 +242,6 @@ namespace hutel.Controllers
         private async Task<Dictionary<Guid, Point>> ReadStorage(Dictionary<string, Tag> tags)
         {
             Dictionary<Guid, Point> points;
-            if (_memoryCache.TryGetValue(_pointsKey, out points))
-            {
-                return points;
-            }
             var pointsString = await _storageClient.ReadPointsAsStringAsync();
             var pointsDataContractList = pointsString == string.Empty
                 ? new PointsStorageDataContract()
@@ -263,8 +257,6 @@ namespace hutel.Controllers
             points = pointsDataContractList.ToDictionary(
                 point => point.Id,
                 point => Point.FromDataContract(point, tags));
-
-            _memoryCache.Set(_pointsKey, points);
             return points;
         }
 
@@ -275,16 +267,11 @@ namespace hutel.Controllers
             var pointsJson = JsonConvert.SerializeObject(
                 points.Values.Select(p => p.ToDataContract(tags)).ToList(), jsonSettings);
             await _storageClient.WritePointsAsStringAsync(pointsJson);
-            _memoryCache.Set(_pointsKey, points);
         }
 
         private async Task<Dictionary<string, Tag>> ReadTags()
         {
             Dictionary<string, Tag> tags;
-            if (_memoryCache.TryGetValue(_tagsKey, out tags))
-            {
-                return tags;
-            }
             var tagsString = await _storageClient.ReadTagsAsStringAsync();
             var tagsDataContractList =
                 JsonConvert.DeserializeObject<List<TagDataContract>>(tagsString);
@@ -303,7 +290,6 @@ namespace hutel.Controllers
             tags = tagsDataContractList.ToDictionary(
                 tag => tag.Id,
                 tag => Tag.FromDataContract(tag));
-            _memoryCache.Set(_tagsKey, tags);
             return tags;
         }
 
@@ -312,7 +298,6 @@ namespace hutel.Controllers
             var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
             var tagsJson = JsonConvert.SerializeObject(tagsDataContract, jsonSettings);
             await _storageClient.WriteTagsAsStringAsync(tagsJson);
-            _memoryCache.Set(_tagsKey, tags);
         }
     }
 }
