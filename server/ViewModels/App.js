@@ -77,13 +77,6 @@ class App extends React.Component {
   }
   
   updateCharts() {
-    this.setState({
-      charts: [],
-      chartsLoading: false,
-      chartsPointsLeftToLoad: 0
-    });
-    
-    /*
     this.setState({chartsLoading: true}, () => {
       $.ajax({
         url: "/api/charts",
@@ -102,7 +95,6 @@ class App extends React.Component {
         }
       });
     });
-    */
   }
 
   updateChartsPoints() {
