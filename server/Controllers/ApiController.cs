@@ -68,14 +68,8 @@ namespace hutel.Controllers
         [HttpGet("/api/points")]
         public async Task<IActionResult> GetAllPoints(string startDate, string tagId, string tagIds)
         {
-            await tagsCacheLock.WaitAsync();
-            var tags = await ReadTags();
-            tagsCacheLock.Release();
-
-            await pointsCacheLock.WaitAsync();
-            var points = await ReadStorage(tags);
-            pointsCacheLock.Release();
-
+            var tags = await ReadTagsSafe();
+            var points = await ReadStorageSafe(tags);
             var tagIdsList = tagIds != null
                 ? tagIds.Split(',')
                 : tagId != null
@@ -105,122 +99,126 @@ namespace hutel.Controllers
         public async Task<IActionResult> PutAllPoints(
             [FromBody]PointsStorageDataContract replacementPoints)
         {
-            await tagsCacheLock.WaitAsync();
-            var tags = await ReadTags();
-            tagsCacheLock.Release();
-
+            var tags = await ReadTagsSafe();
             await pointsCacheLock.WaitAsync();
-            var points = await ReadStorage(tags);
-
-            IEnumerable<Point> pointsList;
             try
             {
-                pointsList = replacementPoints.Select(p => Point.FromDataContract(p, tags));
+                var points = await ReadStorageUnsafe(tags);
+
+                IEnumerable<Point> pointsList;
+                try
+                {
+                    pointsList = replacementPoints.Select(p => Point.FromDataContract(p, tags));
+                }
+                catch(PointValidationException ex)
+                {
+                    return new BadRequestObjectResult(ex.ToString());
+                }
+
+                var duplicatePoints = pointsList
+                    .Select(point => point.Id)
+                    .GroupBy(id => id)
+                    .Where(g => g.Count() > 1);
+
+                if (duplicatePoints.Any())
+                {
+                    return new BadRequestObjectResult(
+                        new InvalidOperationException(
+                            $"Duplicate point ids: {string.Join(", ", duplicatePoints)}").ToString());
+                }
+
+                points.Clear();
+                foreach (var p in pointsList)
+                {
+                    points.Add(p.Id, p);
+                }
+
+                await WriteStorageUnsafe(points, tags);
+                return Json(points.Values.Select(p => p.ToDataContract(tags)).ToList());
             }
-            catch(PointValidationException ex)
+            finally
             {
-                return new BadRequestObjectResult(ex.ToString());
+                pointsCacheLock.Release();
             }
-
-            var duplicatePoints = pointsList
-                .Select(point => point.Id)
-                .GroupBy(id => id)
-                .Where(g => g.Count() > 1);
-
-            if (duplicatePoints.Any())
-            {
-                return new BadRequestObjectResult(
-                    new InvalidOperationException(
-                        $"Duplicate point ids: {string.Join(", ", duplicatePoints)}").ToString());
-            }
-
-            points.Clear();
-            foreach (var p in pointsList)
-            {
-                points.Add(p.Id, p);
-            }
-
-            await WriteStorage(points, tags);
-            pointsCacheLock.Release();
-            return Json(points.Values.Select(p => p.ToDataContract(tags)).ToList());
         }
 
         [HttpPost("/api/points")]
         [ValidateModelState]
         public async Task<IActionResult> PostOnePoint([FromBody]PointDataContract input)
         {
-            await tagsCacheLock.WaitAsync();
-            var tags = await ReadTags();
-            tagsCacheLock.Release();
-
+            var tags = await ReadTagsSafe();
             await pointsCacheLock.WaitAsync();
-            var points = await ReadStorage(tags);
-
-            var id = Guid.NewGuid();
-            Point point;
             try
             {
-                point = Point.FromDataContract(
-                    input, id, new HutelTimestamp(DateTime.UtcNow), tags);
-            }
-            catch(PointValidationException ex)
-            {
-                return new BadRequestObjectResult(ex.ToString());
-            }
+                var points = await ReadStorageUnsafe(tags);
+                var id = Guid.NewGuid();
+                Point point;
+                try
+                {
+                    point = Point.FromDataContract(
+                        input, id, new HutelTimestamp(DateTime.UtcNow), tags);
+                }
+                catch(PointValidationException ex)
+                {
+                    return new BadRequestObjectResult(ex.ToString());
+                }
 
-            points[id] = point;
-            await WriteStorage(points, tags);
-            pointsCacheLock.Release();
-            return Json(point.ToDataContract(tags));
+                points[id] = point;
+                await WriteStorageUnsafe(points, tags);
+                return Json(point.ToDataContract(tags));
+            }
+            finally
+            {
+                pointsCacheLock.Release();
+            }
         }
 
         [HttpPut("/api/point/{id}")]
         [ValidateModelState]
         public async Task<IActionResult> PutOnePoint(Guid id, [FromBody]PointDataContract input)
         {
-            await tagsCacheLock.WaitAsync();
-            var tags = await ReadTags();
-            tagsCacheLock.Release();
-
+            var tags = await ReadTagsSafe();
             await pointsCacheLock.WaitAsync();
-            var points = await ReadStorage(tags);
-
-            if (!points.ContainsKey(id))
-            {
-                return new BadRequestObjectResult(
-                    new ArgumentOutOfRangeException($"No point with id {id}").ToString());
-            }
-
-            Point point;
             try
             {
-                point = Point.FromDataContract(input, id, points[id].SubmitTimestamp, tags);
+                var points = await ReadStorageUnsafe(tags);
+                if (!points.ContainsKey(id))
+                {
+                    return new BadRequestObjectResult(
+                        new ArgumentOutOfRangeException($"No point with id {id}").ToString());
+                }
+
+                Point point;
+                try
+                {
+                    point = Point.FromDataContract(input, id, points[id].SubmitTimestamp, tags);
+                }
+                catch(PointValidationException ex)
+                {
+                    return new BadRequestObjectResult(ex.ToString());
+                }
+
+                if (string.Compare(point.TagId, points[id].TagId, true) != 0) {
+                    return new BadRequestObjectResult(
+                        new ArgumentOutOfRangeException(
+                            $"Tag id differs from the known one. " +
+                            $"Expected: {points[id].TagId}, got: {point.TagId}").ToString());
+                }
+
+                points[id] = point;
+                await WriteStorageUnsafe(points, tags);
+                return Json(point.ToDataContract(tags));
             }
-            catch(PointValidationException ex)
+            finally
             {
-                return new BadRequestObjectResult(ex.ToString());
+                pointsCacheLock.Release();
             }
-
-            if (string.Compare(point.TagId, points[id].TagId, true) != 0) {
-                return new BadRequestObjectResult(
-                    new ArgumentOutOfRangeException(
-                        $"Tag id differs from the known one. " +
-                        $"Expected: {points[id].TagId}, got: {point.TagId}").ToString());
-            }
-
-            points[id] = point;
-            await WriteStorage(points, tags);
-            pointsCacheLock.Release();
-            return Json(point.ToDataContract(tags));
         }
 
         [HttpGet("/api/tags")]
         public async Task<IActionResult> GetAllTags()
         {
-            await tagsCacheLock.WaitAsync();
-            var tags = await ReadTags();
-            tagsCacheLock.Release();
-
+            var tags = await ReadTagsSafe();
             var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
             return Json(tagsDataContract);
         }
@@ -236,65 +234,72 @@ namespace hutel.Controllers
             }
 
             await tagsCacheLock.WaitAsync();
-            var tags = await ReadTags();
-
-            await pointsCacheLock.WaitAsync();
-            var points = await ReadStorage(tags);
-            pointsCacheLock.Release();
-
-            var replacementTagsList = inputList.Select(input => Tag.FromDataContract(input));
-            var duplicateTags = replacementTagsList
-                .Select(tag => tag.Id)
-                .GroupBy(id => id)
-                .Where(g => g.Count() > 1);
-
-            if (duplicateTags.Any())
-            {
-                return new BadRequestObjectResult(
-                    new InvalidOperationException(
-                        $"Duplicate tag ids: {string.Join(", ", duplicateTags)}").ToString());
-            }
-            
-            var pointsDataContract = points.Values.Select(point => point.ToDataContract(tags));
-            var replacementTags = replacementTagsList.ToDictionary(tag => tag.Id, tag => tag);
             try
             {
-                foreach (var pointDataContract in pointsDataContract)
+                var tags = await ReadTagsUnsafe();
+                var points = await ReadStorageSafe(tags);
+                var replacementTagsList = inputList.Select(input => Tag.FromDataContract(input));
+                var duplicateTags = replacementTagsList
+                    .Select(tag => tag.Id)
+                    .GroupBy(id => id)
+                    .Where(g => g.Count() > 1);
+
+                if (duplicateTags.Any())
                 {
-                    Point.FromDataContract(pointDataContract, replacementTags);
+                    return new BadRequestObjectResult(
+                        new InvalidOperationException(
+                            $"Duplicate tag ids: {string.Join(", ", duplicateTags)}").ToString());
                 }
-            }
-            catch(PointValidationException ex)
-            {
-                return new BadRequestObjectResult(ex.ToString());
-            }
+                
+                var pointsDataContract = points.Values.Select(point => point.ToDataContract(tags));
+                var replacementTags = replacementTagsList.ToDictionary(tag => tag.Id, tag => tag);
+                try
+                {
+                    foreach (var pointDataContract in pointsDataContract)
+                    {
+                        Point.FromDataContract(pointDataContract, replacementTags);
+                    }
+                }
+                catch(PointValidationException ex)
+                {
+                    return new BadRequestObjectResult(ex.ToString());
+                }
 
-            tags.Clear();
-            foreach (var tag in replacementTagsList)
-            {
-                tags.Add(tag.Id, tag);
-            }
+                tags.Clear();
+                foreach (var tag in replacementTagsList)
+                {
+                    tags.Add(tag.Id, tag);
+                }
 
-            await WriteTags(tags);
-            tagsCacheLock.Release();
-            return Json(tags.Values);
+                await WriteTagsUnsafe(tags);
+                return Json(tags.Values);
+            }
+            finally
+            {
+                tagsCacheLock.Release();
+            }
         }
         
         [HttpGet("/api/charts")]
         public async Task<IActionResult> GetAllCharts()
         {
             await chartsCacheLock.WaitAsync();
-            
-            string chartsString;
-            var userId = (string)HttpContext.Items["UserId"];
-            if (!chartsCache.TryGetValue(userId, out chartsString))
+            try
             {
-                chartsString = await _storageClient.ReadChartsAsStringAsync();
-                chartsCache[userId] = chartsString;
+                string chartsString;
+                var userId = (string)HttpContext.Items["UserId"];
+                if (!chartsCache.TryGetValue(userId, out chartsString))
+                {
+                    chartsString = await _storageClient.ReadChartsAsStringAsync();
+                    chartsCache[userId] = chartsString;
+                }
+                
+                return Content(chartsString, "application/json");
             }
-            
-            chartsCacheLock.Release();
-            return Content(chartsString, "application/json");
+            finally
+            {
+                chartsCacheLock.Release();
+            }
         }
 
         [HttpPut("/api/charts")]
@@ -302,14 +307,33 @@ namespace hutel.Controllers
         {
             var chartsString = await new StreamReader(this.Request.Body).ReadToEndAsync();
             await chartsCacheLock.WaitAsync();
-            var userId = (string)HttpContext.Items["UserId"];
-            chartsCache[userId] = chartsString;
-            chartsCacheLock.Release();
-            await _storageClient.WriteChartsAsStringAsync(chartsString);
-            return Ok();
+            try
+            {
+                var userId = (string)HttpContext.Items["UserId"];
+                chartsCache[userId] = chartsString;
+                await _storageClient.WriteChartsAsStringAsync(chartsString);
+                return Ok();
+            }
+            finally
+            {
+                chartsCacheLock.Release();
+            }
         }
 
-        private async Task<Dictionary<Guid, Point>> ReadStorage(Dictionary<string, Tag> tags)
+        private async Task<Dictionary<Guid, Point>> ReadStorageSafe(Dictionary<string, Tag> tags)
+        {
+            await pointsCacheLock.WaitAsync();
+            try
+            {
+                return await this.ReadStorageUnsafe(tags);
+            }
+            finally
+            {
+                pointsCacheLock.Release();
+            }
+        }
+
+        private async Task<Dictionary<Guid, Point>> ReadStorageUnsafe(Dictionary<string, Tag> tags)
         {
             Dictionary<Guid, Point> points;
             string pointsString;
@@ -341,7 +365,7 @@ namespace hutel.Controllers
             return points;
         }
 
-        private async Task WriteStorage(
+        private async Task WriteStorageUnsafe(
             Dictionary<Guid, Point> points,
             Dictionary<string, Tag> tags)
         {
@@ -353,7 +377,20 @@ namespace hutel.Controllers
             await _storageClient.WritePointsAsStringAsync(pointsString);
         }
 
-        private async Task<Dictionary<string, Tag>> ReadTags()
+        private async Task<Dictionary<string, Tag>> ReadTagsSafe()
+        {
+            await tagsCacheLock.WaitAsync();
+            try
+            {
+                return await this.ReadTagsUnsafe();
+            }
+            finally
+            {
+                tagsCacheLock.Release();
+            }
+        }
+
+        private async Task<Dictionary<string, Tag>> ReadTagsUnsafe()
         {
             Dictionary<string, Tag> tags;
             string tagsString;
@@ -389,7 +426,7 @@ namespace hutel.Controllers
             return tags;
         }
 
-        private async Task WriteTags(Dictionary<string, Tag> tags)
+        private async Task WriteTagsUnsafe(Dictionary<string, Tag> tags)
         {
             var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
             var tagsString = JsonConvert.SerializeObject(tagsDataContract, jsonSettings);
