@@ -320,6 +320,47 @@ namespace hutel.Controllers
             }
         }
 
+        [HttpGet("/api/reload")]
+        public async Task<IActionResult> Reload()
+        {
+            var userId = (string)HttpContext.Items["UserId"];
+            
+            await tagsCacheLock.WaitAsync();
+            try
+            {
+                var tagsString = await _storageClient.ReadTagsAsStringAsync();
+                tagsCache[userId] = tagsString;
+            }
+            finally
+            {
+                tagsCacheLock.Release();
+            }
+            
+            await chartsCacheLock.WaitAsync();
+            try
+            {
+                var chartsString = await _storageClient.ReadChartsAsStringAsync();
+                chartsCache[userId] = chartsString;
+            }
+            finally
+            {
+                chartsCacheLock.Release();
+            }
+
+            await pointsCacheLock.WaitAsync();
+            try
+            {
+                var pointsString = await _storageClient.ReadPointsAsStringAsync();
+                pointsCache[userId] = pointsString;
+            }
+            finally
+            {
+                pointsCacheLock.Release();
+            }
+
+            return Ok();
+        }
+
         private async Task<Dictionary<Guid, Point>> ReadStorageSafe(Dictionary<string, Tag> tags)
         {
             await pointsCacheLock.WaitAsync();

@@ -57,6 +57,10 @@ class Home extends React.Component {
                   primaryText="Edit raw charts"
                   onTouchTap={this.onEditRawChartsClick.bind(this)}
                 />
+                <MenuItem
+                  primaryText="Reload from storage"
+                  onTouchTap={this.props.reloadFromStorageCallback}
+                />
               </IconMenu>
             }
           />
@@ -86,6 +90,7 @@ Home.propTypes = {
   points: PropTypes.array,
   charts: PropTypes.array,
   chartsPoints: PropTypes.array,
+  reloadFromStorageCallback: PropTypes.func,
   history: PropTypes.object,
   theme: PropTypes.object
 };

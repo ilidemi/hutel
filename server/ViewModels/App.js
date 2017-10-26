@@ -26,10 +26,11 @@ class App extends React.Component {
       points: [],
       charts: [],
       chartsPoints: [],
-      tagsLoading: true,
       pointsLoading: true,
+      tagsLoading: true,
       chartsLoading: true,
-      chartsPointsLeftToLoad: 0
+      chartsPointsLeftToLoad: 0,
+      fromStorageLoading: false
     };
   }
 
@@ -129,6 +130,30 @@ class App extends React.Component {
     });
   }
 
+  reloadFromStorage() {
+    this.setState({fromStorageLoading: true}, () => {
+      $.ajax({
+        url: "/api/reload",
+        cache: false,
+        success: () => {
+          $.when(
+            this.updatePoints(),
+            this.updateTags(),
+            this.updateCharts()
+          ).done(
+            () => this.setState({
+              fromStorageLoading: false,
+            })
+          );
+        },
+        error: (xhr, status, err) => {
+          console.error(err);
+          this.setState({fromStorageLoading: false});
+        }
+      });
+    });
+  }
+
   onPointsChanged() {
     this.updatePoints();
     this.setState({
@@ -149,12 +174,14 @@ class App extends React.Component {
       historyBackground: Colors.grey100,
       historyDateText: Colors.deepPurple900
     };
+
     const muiTheme = getMuiTheme({
       palette: {
         primary1Color: Colors.amber900,
         accent1Color: Colors.yellow500
       }
     });
+
     const columnStyle = {
       maxWidth: 800,
       margin: "auto",
@@ -163,7 +190,14 @@ class App extends React.Component {
       flexHeight: "100%",
       flexMinHeight: "100%"
     };
-    const body = this.state.tagsLoading || this.state.pointsLoading || this.state.chartsLoading || this.state.chartsPointsLeftToLoad > 0
+
+    const loading = this.state.tagsLoading ||
+      this.state.pointsLoading ||
+      this.state.chartsLoading ||
+      this.state.chartsPointsLeftToLoad ||
+      this.fromStorageLoading;
+
+    const body = loading
       ? <Loading theme={theme} />
       : <div>
           <div>
@@ -174,6 +208,7 @@ class App extends React.Component {
                 points={this.state.points}
                 charts={this.state.charts}
                 chartsPoints={this.state.chartsPoints}
+                reloadFromStorageCallback={this.reloadFromStorage.bind(this)}
                 theme={theme}
               />
             )} />
