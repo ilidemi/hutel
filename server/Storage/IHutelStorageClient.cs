@@ -16,5 +16,6 @@ namespace hutel.Storage
         Task<string> ReadChartsAsStringAsync();
 
         Task WriteChartsAsStringAsync(string data);
+        Task Reload();
     }
 }

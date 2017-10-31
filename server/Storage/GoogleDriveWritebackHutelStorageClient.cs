@@ -11,12 +11,15 @@ namespace hutel.Storage
     public class GoogleDriveWritebackHutelStorageClient : IHutelStorageClient
     {
         private static readonly TimeSpan FlushPeriod = TimeSpan.FromSeconds(10);
-        private string _chartsPending;
-        private string _pointsPending;
-        private string _tagsPending;
-        private SemaphoreSlim _chartsPendingLock = new SemaphoreSlim(1);
-        private SemaphoreSlim _pointsPendingLock = new SemaphoreSlim(1);
-        private SemaphoreSlim _tagsPendingLock = new SemaphoreSlim(1);
+        private string _chartsCache;
+        private string _pointsCache;
+        private string _tagsCache;
+        private bool _chartsChanged = false;
+        private bool _pointsChanged = false;
+        private bool _tagsChanged = false;
+        private SemaphoreSlim _chartsCacheLock = new SemaphoreSlim(1);
+        private SemaphoreSlim _pointsCacheLock = new SemaphoreSlim(1);
+        private SemaphoreSlim _tagsCacheLock = new SemaphoreSlim(1);
         private GoogleDriveHutelStorageClient _googleDriveClient;
         private ILogger<GoogleDriveWritebackHutelStorageClient> _logger;
 
@@ -31,12 +34,13 @@ namespace hutel.Storage
         {
             while (true)
             {
-                await _chartsPendingLock.WaitAsync();
-                var charts = _chartsPending;
-                _chartsPending = null;
-                _chartsPendingLock.Release();
-                if (charts != null)
+                if (_chartsChanged)
                 {
+                    await _chartsCacheLock.WaitAsync();
+                    var charts = _chartsCache;
+                    _chartsChanged = false;
+                    _chartsCacheLock.Release();
+                    
                     try
                     {
                         await _googleDriveClient.WriteChartsAsStringAsync(charts);
@@ -47,13 +51,14 @@ namespace hutel.Storage
                         _logger.LogError(ex, "Charts write failed");
                     }
                 }
-                
-                await _pointsPendingLock.WaitAsync();
-                var points = _pointsPending;
-                _pointsPending = null;
-                _pointsPendingLock.Release();
-                if (points != null)
+
+                if (_pointsChanged)
                 {
+                    await _pointsCacheLock.WaitAsync();
+                    var points = _pointsCache;
+                    _pointsChanged = false;
+                    _pointsCacheLock.Release();
+                    
                     try
                     {
                         await _googleDriveClient.WritePointsAsStringAsync(points);
@@ -64,13 +69,14 @@ namespace hutel.Storage
                         _logger.LogError(ex, "Points write failed");
                     }
                 }
-                
-                await _tagsPendingLock.WaitAsync();
-                var tags = _tagsPending;
-                _tagsPending = null;
-                _tagsPendingLock.Release();
-                if (tags != null)
+
+                if (_tagsChanged)
                 {
+                    await _tagsCacheLock.WaitAsync();
+                    var tags = _tagsCache;
+                    _tagsChanged = false;
+                    _tagsCacheLock.Release();
+
                     try
                     {
                         await _googleDriveClient.WriteTagsAsStringAsync(tags);
@@ -88,38 +94,125 @@ namespace hutel.Storage
 
         public async Task<string> ReadChartsAsStringAsync()
         {
-            return await _googleDriveClient.ReadChartsAsStringAsync();
+            if (_chartsCache == null)
+            {
+                await _chartsCacheLock.WaitAsync();
+                try
+                {
+                    if (_chartsCache == null)
+                    {
+                        _chartsCache = await _googleDriveClient.ReadChartsAsStringAsync();
+                    }
+                }
+                finally
+                {
+                    _chartsCacheLock.Release();
+                }
+            }
+
+            return _chartsCache;
         }
 
         public async Task<string> ReadPointsAsStringAsync()
         {
-            return await _googleDriveClient.ReadPointsAsStringAsync();
+            if (_pointsCache == null)
+            {
+                await _pointsCacheLock.WaitAsync();
+                try
+                {
+                    if (_pointsCache == null)
+                    {
+                        _pointsCache = await _googleDriveClient.ReadPointsAsStringAsync();
+                    }
+                }
+                finally
+                {
+                    _pointsCacheLock.Release();
+                }
+            }
+            
+            return _pointsCache;
         }
 
         public async Task<string> ReadTagsAsStringAsync()
         {
-            return await _googleDriveClient.ReadTagsAsStringAsync();
+            if (_tagsCache == null)
+            {
+                await _tagsCacheLock.WaitAsync();
+                try
+                {
+                    if (_tagsCache == null)
+                    {
+                        _tagsCache = await _googleDriveClient.ReadTagsAsStringAsync();
+                    }
+                }
+                finally
+                {
+                    _tagsCacheLock.Release();
+                }
+            }
+            
+            return _tagsCache;
         }
 
         public async Task WriteChartsAsStringAsync(string data)
         {
-            await _chartsPendingLock.WaitAsync();
-            _chartsPending = data;
-            _chartsPendingLock.Release();
+            await _chartsCacheLock.WaitAsync();
+            _chartsCache = data;
+            _chartsChanged = true;
+            _chartsCacheLock.Release();
         }
 
         public async Task WritePointsAsStringAsync(string data)
         {
-            await _pointsPendingLock.WaitAsync();
-            _pointsPending = data;
-            _pointsPendingLock.Release();
+            await _pointsCacheLock.WaitAsync();
+            _pointsCache = data;
+            _pointsChanged = true;
+            _pointsCacheLock.Release();
         }
 
         public async Task WriteTagsAsStringAsync(string data)
         {
-            await _tagsPendingLock.WaitAsync();
-            _tagsPending = data;
-            _tagsPendingLock.Release();
+            await _tagsCacheLock.WaitAsync();
+            _tagsCache = data;
+            _tagsChanged =true;
+            _tagsCacheLock.Release();
+        }
+
+        public async Task Reload()
+        {
+            await _chartsCacheLock.WaitAsync();
+            try
+            {
+                _chartsCache = await _googleDriveClient.ReadChartsAsStringAsync();
+                _chartsChanged = false;
+            }
+            finally
+            {
+                _chartsCacheLock.Release();
+            }
+            
+            await _pointsCacheLock.WaitAsync();
+            try
+            {
+                _pointsCache = await _googleDriveClient.ReadPointsAsStringAsync();
+                _pointsChanged = false;
+            }
+            finally
+            {
+                _pointsCacheLock.Release();
+            }
+            
+            await _tagsCacheLock.WaitAsync();
+            try
+            {
+                _tagsCache = await _googleDriveClient.ReadTagsAsStringAsync();
+                _tagsChanged = false;
+            }
+            finally
+            {
+                _tagsCacheLock.Release();
+            }
         }
     }
 }

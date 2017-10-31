@@ -86,6 +86,12 @@ namespace hutel.Storage
             await WriteFileAsStringAsync(_chartsFileId, data);
         }
 
+        public Task Reload()
+        {
+            // This implementation is synchronous, nothing to reload
+            return Task.CompletedTask;
+        }
+
         private async Task InitAsync()
         {
             if (_initialized)

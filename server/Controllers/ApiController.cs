@@ -37,12 +37,9 @@ namespace hutel.Controllers
             Formatting = Formatting.Indented,
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
-        private static Dictionary<string, string> tagsCache = new Dictionary<string, string>();
-        private static SemaphoreSlim tagsCacheLock = new SemaphoreSlim(1);
-        private static Dictionary<string, string> chartsCache = new Dictionary<string, string>();
-        private static SemaphoreSlim chartsCacheLock = new SemaphoreSlim(1);
-        private static Dictionary<string, string> pointsCache = new Dictionary<string, string>();
-        private static SemaphoreSlim pointsCacheLock = new SemaphoreSlim(1);
+        private static SemaphoreSlim tagsLock = new SemaphoreSlim(1);
+        private static SemaphoreSlim chartsLock = new SemaphoreSlim(1);
+        private static SemaphoreSlim pointsLock = new SemaphoreSlim(1);
 
         public ApiController(ILogger<ApiController> logger)
         {
@@ -115,7 +112,7 @@ namespace hutel.Controllers
             [FromBody]PointsStorageDataContract replacementPoints)
         {
             var tags = await ReadTagsSafe();
-            await pointsCacheLock.WaitAsync();
+            await pointsLock.WaitAsync();
             try
             {
                 var points = await ReadStorageUnsafe(tags);
@@ -153,7 +150,7 @@ namespace hutel.Controllers
             }
             finally
             {
-                pointsCacheLock.Release();
+                pointsLock.Release();
             }
         }
 
@@ -162,7 +159,7 @@ namespace hutel.Controllers
         public async Task<IActionResult> PostOnePoint([FromBody]PointDataContract input)
         {
             var tags = await ReadTagsSafe();
-            await pointsCacheLock.WaitAsync();
+            await pointsLock.WaitAsync();
             try
             {
                 var points = await ReadStorageUnsafe(tags);
@@ -184,7 +181,7 @@ namespace hutel.Controllers
             }
             finally
             {
-                pointsCacheLock.Release();
+                pointsLock.Release();
             }
         }
 
@@ -193,7 +190,7 @@ namespace hutel.Controllers
         public async Task<IActionResult> PutOnePoint(Guid id, [FromBody]PointDataContract input)
         {
             var tags = await ReadTagsSafe();
-            await pointsCacheLock.WaitAsync();
+            await pointsLock.WaitAsync();
             try
             {
                 var points = await ReadStorageUnsafe(tags);
@@ -226,7 +223,7 @@ namespace hutel.Controllers
             }
             finally
             {
-                pointsCacheLock.Release();
+                pointsLock.Release();
             }
         }
 
@@ -248,7 +245,7 @@ namespace hutel.Controllers
                     new InvalidOperationException("Tags list is empty"));
             }
 
-            await tagsCacheLock.WaitAsync();
+            await tagsLock.WaitAsync();
             try
             {
                 var tags = await ReadTagsUnsafe();
@@ -291,29 +288,22 @@ namespace hutel.Controllers
             }
             finally
             {
-                tagsCacheLock.Release();
+                tagsLock.Release();
             }
         }
         
         [HttpGet("/api/charts")]
         public async Task<IActionResult> GetAllCharts()
         {
-            await chartsCacheLock.WaitAsync();
+            await chartsLock.WaitAsync();
             try
             {
-                string chartsString;
-                var userId = (string)HttpContext.Items["UserId"];
-                if (!chartsCache.TryGetValue(userId, out chartsString))
-                {
-                    chartsString = await _storageClient.ReadChartsAsStringAsync();
-                    chartsCache[userId] = chartsString;
-                }
-                
+                var chartsString = await _storageClient.ReadChartsAsStringAsync();                
                 return Content(chartsString, "application/json");
             }
             finally
             {
-                chartsCacheLock.Release();
+                chartsLock.Release();
             }
         }
 
@@ -321,84 +311,55 @@ namespace hutel.Controllers
         public async Task<IActionResult> PutAllCharts()
         {
             var chartsString = await new StreamReader(this.Request.Body).ReadToEndAsync();
-            await chartsCacheLock.WaitAsync();
+            await chartsLock.WaitAsync();
             try
             {
-                var userId = (string)HttpContext.Items["UserId"];
-                chartsCache[userId] = chartsString;
                 await _storageClient.WriteChartsAsStringAsync(chartsString);
                 return Ok();
             }
             finally
             {
-                chartsCacheLock.Release();
+                chartsLock.Release();
             }
         }
 
         [HttpGet("/api/reload")]
         public async Task<IActionResult> Reload()
         {
-            var userId = (string)HttpContext.Items["UserId"];
-            
-            await tagsCacheLock.WaitAsync();
+            await chartsLock.WaitAsync();
+            await pointsLock.WaitAsync();
+            await tagsLock.WaitAsync();
             try
             {
-                var tagsString = await _storageClient.ReadTagsAsStringAsync();
-                tagsCache[userId] = tagsString;
+                await _storageClient.Reload();
             }
             finally
             {
-                tagsCacheLock.Release();
+                tagsLock.Release();
+                pointsLock.Release();
+                chartsLock.Release();
             }
-            
-            await chartsCacheLock.WaitAsync();
-            try
-            {
-                var chartsString = await _storageClient.ReadChartsAsStringAsync();
-                chartsCache[userId] = chartsString;
-            }
-            finally
-            {
-                chartsCacheLock.Release();
-            }
-
-            await pointsCacheLock.WaitAsync();
-            try
-            {
-                var pointsString = await _storageClient.ReadPointsAsStringAsync();
-                pointsCache[userId] = pointsString;
-            }
-            finally
-            {
-                pointsCacheLock.Release();
-            }
-
             return Ok();
         }
 
         private async Task<Dictionary<Guid, Point>> ReadStorageSafe(Dictionary<string, Tag> tags)
         {
-            await pointsCacheLock.WaitAsync();
+            await pointsLock.WaitAsync();
             try
             {
                 return await this.ReadStorageUnsafe(tags);
             }
             finally
             {
-                pointsCacheLock.Release();
+                pointsLock.Release();
             }
         }
 
         private async Task<Dictionary<Guid, Point>> ReadStorageUnsafe(Dictionary<string, Tag> tags)
         {
             Dictionary<Guid, Point> points;
-            string pointsString;
             var userId = (string)HttpContext.Items["UserId"];
-            if (!pointsCache.TryGetValue(userId, out pointsString))
-            {
-                pointsString = await _storageClient.ReadPointsAsStringAsync();
-                pointsCache[userId] = pointsString;
-            }
+            var pointsString = await _storageClient.ReadPointsAsStringAsync();
             
             var pointsDataContractList = pointsString == string.Empty
                 ? new PointsStorageDataContract()
@@ -427,36 +388,27 @@ namespace hutel.Controllers
         {
             var pointsString = JsonConvert.SerializeObject(
                 points.Values.Select(p => p.ToDataContract(tags)).ToList(), jsonSettings);
-
-            var userId = (string)HttpContext.Items["UserId"];
-            pointsCache[userId] = pointsString;
+                
             await _storageClient.WritePointsAsStringAsync(pointsString);
         }
 
         private async Task<Dictionary<string, Tag>> ReadTagsSafe()
         {
-            await tagsCacheLock.WaitAsync();
+            await tagsLock.WaitAsync();
             try
             {
                 return await this.ReadTagsUnsafe();
             }
             finally
             {
-                tagsCacheLock.Release();
+                tagsLock.Release();
             }
         }
 
         private async Task<Dictionary<string, Tag>> ReadTagsUnsafe()
         {
             Dictionary<string, Tag> tags;
-            string tagsString;
-            var userId = (string)HttpContext.Items["UserId"];
-            if (!tagsCache.TryGetValue(userId, out tagsString))
-            {
-                tagsString = await _storageClient.ReadTagsAsStringAsync();
-                tagsCache[userId] = tagsString;
-            }
-
+            var tagsString = await _storageClient.ReadTagsAsStringAsync();
             var tagsDataContractList =
                 JsonConvert.DeserializeObject<List<TagDataContract>>(tagsString);
 
@@ -486,8 +438,6 @@ namespace hutel.Controllers
         {
             var tagsDataContract = tags.Values.Select(tag => tag.ToDataContract());
             var tagsString = JsonConvert.SerializeObject(tagsDataContract, jsonSettings);
-            var userId = (string)HttpContext.Items["UserId"];
-            tagsCache[userId] = tagsString;
             await _storageClient.WriteTagsAsStringAsync(tagsString);
         }
     }

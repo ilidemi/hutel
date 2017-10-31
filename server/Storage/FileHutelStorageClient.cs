@@ -48,6 +48,12 @@ namespace hutel.Storage
             await WriteFileAsync(ChartsFileName, ChartsBackupFileName, data);
         }
 
+        public Task Reload()
+        {
+            // This implementation is synchronous, nothing to reload
+            return Task.CompletedTask;
+        }
+
         private async Task<string> ReadFileAsync(string fileName)
         {
             if (await _fileStorageClient.ExistsAsync(fileName))
