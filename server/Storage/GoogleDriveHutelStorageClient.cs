@@ -4,9 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Google.Apis.Drive.v2;
-using hutel.Logic;
-using Microsoft.Extensions.Caching.Memory;
-
+using Microsoft.Extensions.Logging;
 using GoogleFile = Google.Apis.Drive.v2.Data.File;
 using ParentReference = Google.Apis.Drive.v2.Data.ParentReference;
 
@@ -34,24 +32,26 @@ namespace hutel.Storage
         private DateTime? _tagsLastBackupDate;
         private string _chartsFileId;
         private DateTime? _chartsLastBackupDate;
+        private ILogger _logger;
         
         public GoogleDriveHutelStorageClient(string userId)
         {
             _userId = userId;
             _initialized = false;
+            _logger = Program.LoggerFactory.CreateLogger<GoogleDriveHutelStorageClient>();
         }
 
         public async Task<string> ReadPointsAsStringAsync()
         {
             await InitAsync();
-            Console.WriteLine("ReadPointsAsStringAsync");
+            _logger.LogInformation("ReadPointsAsStringAsync");
             return await ReadFileAsStringAsync(_pointsFileId);
         }
 
         public async Task WritePointsAsStringAsync(string data)
         {
             await InitAsync();
-            Console.WriteLine("WritePointsAsStringAsync");
+            _logger.LogInformation("WritePointsAsStringAsync");
             await BackupStorageIfNeededAsync();
             await WriteFileAsStringAsync(_pointsFileId, data);
         }
@@ -59,14 +59,14 @@ namespace hutel.Storage
         public async Task<string> ReadTagsAsStringAsync()
         {
             await InitAsync();
-            Console.WriteLine("ReadTagsAsStringAsync");
+            _logger.LogInformation("ReadTagsAsStringAsync");
             return await ReadFileAsStringAsync(_tagsFileId);
         }
 
         public async Task WriteTagsAsStringAsync(string data)
         {
             await InitAsync();
-            Console.WriteLine("WriteTagsAsStringAsync");
+            _logger.LogInformation("WriteTagsAsStringAsync");
             await BackupTagsIfNeededAsync();
             await WriteFileAsStringAsync(_tagsFileId, data);
         }
@@ -74,14 +74,14 @@ namespace hutel.Storage
         public async Task<string> ReadChartsAsStringAsync()
         {
             await InitAsync();
-            Console.WriteLine("ReadChartsAsStringAsync");
+            _logger.LogInformation("ReadChartsAsStringAsync");
             return await ReadFileAsStringAsync(_chartsFileId);
         }
 
         public async Task WriteChartsAsStringAsync(string data)
         {
             await InitAsync();
-            Console.WriteLine("WriteChartsAsStringAsync");
+            _logger.LogInformation("WriteChartsAsStringAsync");
             await BackupChartsIfNeededAsync();
             await WriteFileAsStringAsync(_chartsFileId, data);
         }
@@ -257,7 +257,7 @@ namespace hutel.Storage
 
         private async Task<string> ReadFileAsStringAsync(string fileId)
         {
-            Console.WriteLine("ReadFileAsStringAsync");
+            _logger.LogInformation("ReadFileAsStringAsync");
             var downloadRequest = _driveService.Files.Get(fileId);
             var stream = new MemoryStream();
             var progress = await downloadRequest.DownloadAsync(stream);
@@ -269,8 +269,7 @@ namespace hutel.Storage
 
         private async Task WriteFileAsStringAsync(string fileId, string data)
         {
-            Console.WriteLine("WriteFileAsStringAsync");
-            
+            _logger.LogInformation("WriteFileAsStringAsync");
             var stream = new MemoryStream();
             var streamWriter = new StreamWriter(stream);
             streamWriter.Write(data);

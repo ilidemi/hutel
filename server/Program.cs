@@ -5,11 +5,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
-namespace server
+namespace hutel
 {
     public class Program
     {
+        public static ILoggerFactory LoggerFactory;
+        
         public static void Main(string[] args)
         {
            var config = new ConfigurationBuilder()

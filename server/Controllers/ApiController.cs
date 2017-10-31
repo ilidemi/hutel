@@ -18,6 +18,8 @@ namespace hutel.Controllers
 {
     public class ApiController : Controller
     {
+        private static readonly Dictionary<string, IHutelStorageClient> _storageClientByUserId =
+            new Dictionary<string, IHutelStorageClient>();
         private readonly ILogger _logger;
         private readonly Lazy<IHutelStorageClient> _storageClientLazy;
         private IHutelStorageClient _storageClient
@@ -25,7 +27,8 @@ namespace hutel.Controllers
             get { return _storageClientLazy.Value; }
         }
         private const string _envUseGoogleStorage = "HUTEL_USE_GOOGLE_STORAGE";
-        private const string _envUseGoogleDrive = "HUTEL_USE_GOOGLE_DRIVE";        
+        private const string _envUseGoogleDrive = "HUTEL_USE_GOOGLE_DRIVE";
+        private const string _envUseGoogleDriveWriteback = "HUTEL_USE_GOOGLE_DRIVE_WRITEBACK";    
         private const string _pointsKey = "points";
         private const string _tagsKey = "tags";
         private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings
@@ -43,7 +46,19 @@ namespace hutel.Controllers
 
         public ApiController(ILogger<ApiController> logger)
         {
-            if (Environment.GetEnvironmentVariable(_envUseGoogleDrive) == "1")
+            if (Environment.GetEnvironmentVariable(_envUseGoogleDriveWriteback) == "1")
+            {
+                _storageClientLazy = new Lazy<IHutelStorageClient>(() =>
+                {
+                    var userId = (string)HttpContext.Items["UserId"];
+                    if (!_storageClientByUserId.ContainsKey(userId))
+                    {
+                        _storageClientByUserId[userId] = new GoogleDriveWritebackHutelStorageClient(userId);
+                    }
+                    return _storageClientByUserId[userId];
+                });
+            }
+            else if (Environment.GetEnvironmentVariable(_envUseGoogleDrive) == "1")
             {
                 _storageClientLazy = new Lazy<IHutelStorageClient>(() =>
                 {

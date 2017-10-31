@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace server
+namespace hutel
 {
     public class Startup
     {
@@ -39,6 +39,7 @@ namespace server
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddConsole(LogLevel.Trace);
+            Program.LoggerFactory = loggerFactory;
 
             if (env.IsDevelopment())
             {
