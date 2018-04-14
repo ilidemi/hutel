@@ -185,7 +185,7 @@ namespace hutel.Controllers
             }
         }
 
-        [HttpPut("/api/point/{id}")]
+        [HttpPut("/api/points/{id}")]
         [ValidateModelState]
         public async Task<IActionResult> PutOnePoint(Guid id, [FromBody]PointDataContract input)
         {
@@ -220,6 +220,30 @@ namespace hutel.Controllers
                 points[id] = point;
                 await WriteStorageUnsafe(points, tags);
                 return Json(point.ToDataContract(tags));
+            }
+            finally
+            {
+                pointsLock.Release();
+            }
+        }
+
+        [HttpDelete("/api/points/{id}")]
+        public async Task<IActionResult> DeleteOnePoint(Guid id)
+        {
+            var tags = await ReadTagsSafe();
+            await pointsLock.WaitAsync();
+            try
+            {
+                var points = await ReadStorageUnsafe(tags);
+                if (!points.ContainsKey(id))
+                {
+                    return new NotFoundObjectResult(
+                        new ArgumentOutOfRangeException($"No point with id {id}").ToString());
+                }
+
+                points.Remove(id);
+                await WriteStorageUnsafe(points, tags);
+                return NoContent();
             }
             finally
             {

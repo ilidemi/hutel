@@ -281,3 +281,6 @@ charts.json.bak
 
 # Webpack bundle
 wwwroot/dist
+
+# Credentials
+google-creds/

@@ -209,6 +209,7 @@ class App extends React.Component {
                 charts={this.state.charts}
                 chartsPoints={this.state.chartsPoints}
                 reloadFromStorageCallback={this.reloadFromStorage.bind(this)}
+                notifyPointsChanged={this.onPointsChanged.bind(this)}
                 theme={theme}
               />
             )} />

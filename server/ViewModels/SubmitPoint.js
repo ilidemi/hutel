@@ -21,7 +21,7 @@ import StringInput from './FieldInput/StringInput';
 import DateInput from './FieldInput/DateInput';
 import TimeInput from './FieldInput/TimeInput';
 import EnumInput from './FieldInput/EnumInput';
-import PointHistory from './PointHistory';
+import PointsHistory from './PointsHistory';
 
 class SubmitPoint extends React.Component {
   constructor(props) {
@@ -170,9 +170,10 @@ class SubmitPoint extends React.Component {
           </div>
           {loadingIndicator}
         </div>
-        <PointHistory
+        <PointsHistory
           points={this.props.points}
           theme={this.props.theme}
+          notifyPointsChanged={this.props.notifyPointsChanged}
         />
       </div>
     );

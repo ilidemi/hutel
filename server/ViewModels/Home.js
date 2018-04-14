@@ -10,7 +10,7 @@ import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
 import Charts from './Charts';
-import PointHistory from './PointHistory';
+import PointsHistory from './PointsHistory';
 import SelectTag from './SelectTag';
 
 class Home extends React.Component {
@@ -76,9 +76,10 @@ class Home extends React.Component {
           chartsPoints={this.props.chartsPoints}
         />
         <Divider />
-        <PointHistory
+        <PointsHistory
           points={this.props.points}
           theme={this.props.theme}
+          notifyPointsChanged={this.props.notifyPointsChanged}
         />
       </div>
     );
@@ -91,6 +92,7 @@ Home.propTypes = {
   charts: PropTypes.array,
   chartsPoints: PropTypes.array,
   reloadFromStorageCallback: PropTypes.func,
+  notifyPointsChanged: PropTypes.func,
   history: PropTypes.object,
   theme: PropTypes.object
 };
