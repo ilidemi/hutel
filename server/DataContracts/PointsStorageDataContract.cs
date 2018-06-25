@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace hutel.Models
 {
-    public class PointsStorageDataContract : List<StoredPointDataContract>
+    public class StoredPointDataContractCollection : List<StoredPointDataContract>
     {
     }
 

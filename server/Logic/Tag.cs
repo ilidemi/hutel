@@ -13,13 +13,13 @@ namespace hutel.Logic
 
         public static Tag FromDataContract(TagDataContract input)
         {
-            if (input.Id == string.Empty)
+            if (string.IsNullOrEmpty(input.Id))
             {
                 throw new TagValidationException("Tag id is empty");
             }
             foreach (var field in input.Fields)
             {
-                if (Point.ReservedFields.Any(name => string.Compare(name, field.Name, true) == 0))
+                if (Point.ReservedFields.Any(name => string.Compare(name, field.Name, StringComparison.OrdinalIgnoreCase) == 0))
                 {
                     throw new TagValidationException(
                         $"Tag {input.Id} contains reserved field {field.Name}");

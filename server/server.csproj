@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
@@ -11,23 +11,25 @@
     <AssetTargetFallback>$(AssetTargetFallback);dotnet5.4;portable-net451+win8</AssetTargetFallback>
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
     <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
+    <CodeAnalysisRuleSet>RuleSet1.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.0.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.0"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0"/>
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.0.0"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.0.0"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.0.0"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.0.0"/>
-    <PackageReference Include="Google.Apis.Drive.v2" Version="1.25.0.858"/>
-    <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.25.0.844"/>
-    <PackageReference Include="Google.Cloud.Datastore.V1" Version="1.0.0"/>
-    <PackageReference Include="Google.Cloud.Storage.V1" Version="1.0.0-beta07"/>
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.0.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.6.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.0.0" />
+    <PackageReference Include="Google.Apis.Drive.v2" Version="1.25.0.858" />
+    <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.25.0.844" />
+    <PackageReference Include="Google.Cloud.Datastore.V1" Version="1.0.0" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="1.0.0-beta07" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\**\*" CopyToPublishDirectory="PreserveNewest" />
@@ -35,21 +37,17 @@
     <Content Include="Dockerfile" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="CopyTags" AfterTargets="Build">
-    <Copy SourceFiles="tags.json"
-        DestinationFolder="$(PublishDir)"
-        Condition="Exists('tags.json')"/>
+    <Copy SourceFiles="tags.json" DestinationFolder="$(PublishDir)" Condition="Exists('tags.json')" />
   </Target>
   <Target Name="CopyCharts" AfterTargets="Build">
-    <Copy SourceFiles="charts.json"
-        DestinationFolder="$(PublishDir)"
-        Condition="Exists('charts.json')"/>
+    <Copy SourceFiles="charts.json" DestinationFolder="$(PublishDir)" Condition="Exists('charts.json')" />
   </Target>
   <Target Name="RunWebpackDev" AfterTargets="Build">
-    <Exec Command="npm install"/>
-    <Exec Command="node node_modules/webpack/bin/webpack.js --config webpack.config.vendor.js --env.dev"/>
-    <Exec Command="node node_modules/webpack/bin/webpack.js --env.dev"/>
+    <Exec Command="npm install" />
+    <Exec Command="node node_modules/webpack/bin/webpack.js --config webpack.config.vendor.js --env.dev" />
+    <Exec Command="node node_modules/webpack/bin/webpack.js --env.dev" />
     <ItemGroup>
-      <DistFiles Include="wwwroot\dist\**"/>
+      <DistFiles Include="wwwroot\dist\**" />
       <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
         <RelativePath>%(DistFiles.Identity)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -57,11 +55,11 @@
     </ItemGroup>
   </Target>
   <Target Name="RunWebpackProd" AfterTargets="ComputeFilesToPublish">
-    <Exec Command="npm install"/>
-    <Exec Command="node node_modules/webpack/bin/webpack.js --config webpack.config.vendor.js --env.prod"/>
-    <Exec Command="node node_modules/webpack/bin/webpack.js --env.prod"/>
+    <Exec Command="npm install" />
+    <Exec Command="node node_modules/webpack/bin/webpack.js --config webpack.config.vendor.js --env.prod" />
+    <Exec Command="node node_modules/webpack/bin/webpack.js --env.prod" />
     <ItemGroup>
-      <DistFiles Include="wwwroot\dist\**"/>
+      <DistFiles Include="wwwroot\dist\**" />
       <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
         <RelativePath>%(DistFiles.Identity)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

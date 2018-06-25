@@ -1,30 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using hutel.Models;
 
 namespace hutel.Logic
 {
     public static class TagFieldConstants
     {
-        public const string Int = "int";
-        public const string Float = "float";
-        public const string String = "string";
-        public const string Date = "date";
-        public const string Time = "time";
-        public const string Enum = "enum";
+        public const string IntType = "int";
+        public const string FloatType = "float";
+        public const string StringType = "string";
+        public const string DateType = "date";
+        public const string TimeType = "time";
+        public const string Type = "enum";
     }
 
     public abstract class BaseTagField
     {
         public abstract string TypeString { get; }
 
-        public string Name { get { return _name; } }
+        public string Name { get; }
 
-        public BaseTagField(TagFieldDataContract tagFieldDataContract)
+        protected BaseTagField(TagFieldDataContract tagFieldDataContract)
         {
-            _name = tagFieldDataContract.Name;
+            Name = tagFieldDataContract.Name;
         }
 
         public abstract Object ValueFromDataContract(Object obj);
@@ -35,19 +34,18 @@ namespace hutel.Logic
         {
             return new TagFieldDataContract
             {
-                Name = _name,
+                Name = Name,
                 Type = TypeString
             };
         }
 
         public static BaseTagField FromDataContract(TagFieldDataContract fieldDataContract)
         {
-            if (fieldDataContract.Name == string.Empty)
+            if (string.IsNullOrEmpty(fieldDataContract.Name))
             {
                 throw new TagValidationException("Field name is empty");
             }
-            Type type;
-            if (!StringToFieldType.TryGetValue(fieldDataContract.Type, out type))
+            if (!StringToFieldType.TryGetValue(fieldDataContract.Type, out Type type))
             {
                 throw new TagValidationException(
                     $"Unknown type {fieldDataContract.Type} in tag field {fieldDataContract.Name}");
@@ -63,8 +61,6 @@ namespace hutel.Logic
             }
         }
 
-        protected readonly string _name;
-        
         private static readonly Dictionary<string, Type> StringToFieldType =
             new Dictionary<string, Type>
             {
@@ -79,7 +75,7 @@ namespace hutel.Logic
 
     public class IntTagField : BaseTagField
     {
-        public override string TypeString { get { return TagFieldConstants.Int; } }
+        public override string TypeString { get { return TagFieldConstants.IntType; } }
 
         public override Object ValueFromDataContract(Object obj)
         {
@@ -98,7 +94,7 @@ namespace hutel.Logic
 
     public class FloatTagField : BaseTagField
     {
-        public override string TypeString { get { return TagFieldConstants.Float; } }
+        public override string TypeString { get { return TagFieldConstants.FloatType; } }
 
         public override Object ValueFromDataContract(Object obj)
         {
@@ -122,7 +118,7 @@ namespace hutel.Logic
 
     public class StringTagField : BaseTagField
     {
-        public override string TypeString { get { return TagFieldConstants.String; } }
+        public override string TypeString { get { return TagFieldConstants.StringType; } }
 
         public override Object ValueFromDataContract(Object obj)
         {
@@ -141,7 +137,7 @@ namespace hutel.Logic
 
     public class DateTagField : BaseTagField
     {
-        public override string TypeString { get { return TagFieldConstants.Date; } }
+        public override string TypeString { get { return TagFieldConstants.DateType; } }
 
         public DateTagField(TagFieldDataContract fieldDataContract) : base(fieldDataContract) {}
         
@@ -167,7 +163,7 @@ namespace hutel.Logic
     
     public class TimeTagField : BaseTagField
     {
-        public override string TypeString { get { return TagFieldConstants.Time; } }
+        public override string TypeString { get { return TagFieldConstants.TimeType; } }
 
         public TimeTagField(TagFieldDataContract fieldDataContract) : base(fieldDataContract) {}
         
@@ -193,7 +189,7 @@ namespace hutel.Logic
 
     public class EnumTagField : BaseTagField
     {
-        public override string TypeString { get { return TagFieldConstants.Enum; } }
+        public override string TypeString { get { return TagFieldConstants.Type; } }
 
         public ICollection<string> Values
         {
@@ -208,7 +204,7 @@ namespace hutel.Logic
         {
             if (fieldDataContract.Values == null || !fieldDataContract.Values.Any())
             {
-                throw new ArgumentOutOfRangeException("Empty enum is useless");
+                throw new ArgumentOutOfRangeException(nameof(fieldDataContract), "Empty enum is useless");
             }
             _values = fieldDataContract.Values;
         }
@@ -216,14 +212,14 @@ namespace hutel.Logic
         public override Object ValueFromDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(string));
-            throwIfNotInCollection(obj);
+            ThrowIfNotInCollection(obj);
             return obj;
         }
 
         public override Object ValueToDataContract(Object obj)
         {
             TypeValidationHelper.Validate(obj, typeof(string));
-            throwIfNotInCollection(obj);
+            ThrowIfNotInCollection(obj);
             return obj;
         }
 
@@ -231,13 +227,13 @@ namespace hutel.Logic
         {
             return new TagFieldDataContract
             {
-                Name = _name,
+                Name = Name,
                 Type = TypeString,
                 Values = _values.ToList()
             };
         }
 
-        private void throwIfNotInCollection(object obj)
+        private void ThrowIfNotInCollection(object obj)
         {
             var str = (string)obj;
             if (!_values.Contains(str))
@@ -264,7 +260,7 @@ namespace hutel.Logic
         }
     }
 
-    public class TypeValidationHelper
+    public static class TypeValidationHelper
     {
         public static void Validate(Object obj, Type expectedType)
         {

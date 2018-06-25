@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -15,7 +16,7 @@ namespace hutel.Middleware
     
         public async Task Invoke(HttpContext httpContext)
         {
-            var protoHeader = httpContext.Request.Headers["X-Forwarded-Proto"].ToString().ToLower();
+            var protoHeader = httpContext.Request.Headers["X-Forwarded-Proto"].ToString().ToLower(CultureInfo.InvariantCulture);
             httpContext.Items["protocol"] = httpContext.Request.IsHttps
                 ? "https"
                 : protoHeader == "https"

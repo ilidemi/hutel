@@ -14,9 +14,9 @@ namespace hutel.Logic
             TimeSpan = TimeSpan.ParseExact(time, _format, CultureInfo.InvariantCulture);
         }
 
-        override public bool Equals(Object other)
+        override public bool Equals(Object obj)
         {
-            return other is HutelTime && TimeSpan == ((HutelTime)other).TimeSpan;
+            return obj is HutelTime && TimeSpan == ((HutelTime)obj).TimeSpan;
         }
 
         override public int GetHashCode()

@@ -1,15 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using System;
 
 namespace hutel.Filters
 {
-    public class ValidateModelStateAttribute : ActionFilterAttribute
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class ValidateModelStateAttribute : ActionFilterAttribute
     {
-        public override void OnActionExecuting(ActionExecutingContext actionContext)
+        public override void OnActionExecuting(ActionExecutingContext context)
         {
-            if (actionContext.ModelState.IsValid == false)
+            if (context.ModelState.IsValid == false)
             {
-                actionContext.Result = new BadRequestObjectResult("Request body is malformed");
+                context.Result = new BadRequestObjectResult("Request body is malformed");
             }
         }
     }

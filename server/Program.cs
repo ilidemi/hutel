@@ -1,18 +1,14 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace hutel
 {
-    public class Program
+    public static class Program
     {
-        public static ILoggerFactory LoggerFactory;
-        
+        public static ILoggerFactory LoggerFactory { get; set; }
+
         public static void Main(string[] args)
         {
            var config = new ConfigurationBuilder()

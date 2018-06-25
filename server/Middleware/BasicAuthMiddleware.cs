@@ -20,7 +20,7 @@ namespace hutel.Middleware
         public async Task Invoke(HttpContext httpContext)
         {
             string authHeader = httpContext.Request.Headers["Authorization"];
-            if (authHeader != null && authHeader.StartsWith("Basic"))
+            if (authHeader != null && authHeader.StartsWith("Basic", StringComparison.OrdinalIgnoreCase))
             {
                 //Extract credentials
                 string encodedUsernamePassword = authHeader.Substring("Basic ".Length).Trim();

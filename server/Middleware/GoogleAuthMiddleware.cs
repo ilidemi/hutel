@@ -18,8 +18,6 @@ namespace hutel.Middleware
         private const string _envGoogleClientId = "GOOGLE_CLIENT_ID";
         private const string _envGoogleClientSecret = "GOOGLE_CLIENT_SECRET";
         private const string _authEndpointBase = "https://accounts.google.com/o/oauth2/v2/auth";
-        private const string _tokenEndpointBase = "https://www.googleapis.com/oauth2/v4/token";
-        private const string _userInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo";
         private readonly TimeSpan _expirationTime = TimeSpan.FromDays(7);
         private readonly TimeSpan _expirationTimeThreshold = TimeSpan.FromDays(6);
         private readonly string _clientId;
@@ -99,7 +97,7 @@ namespace hutel.Middleware
             if (!httpContext.Request.Cookies.ContainsKey(_sessionCookieKey))
             {
                 _logger.LogInformation(
-                    LoggingEvents.SESSION_EXPIRED,
+                    LoggingEvents.SessionExpired,
                     null,
                     "No session id in cookie, redirecting to auth");
                 httpContext.Response.Redirect(authEndpoint);
@@ -110,7 +108,7 @@ namespace hutel.Middleware
             if (session == null)
             {
                 _logger.LogInformation(
-                    LoggingEvents.SESSION_EXPIRED,
+                    LoggingEvents.SessionExpired,
                     null,
                     "No session in datastore, redirecting to auth");
                 httpContext.Response.Redirect(authEndpoint);
@@ -120,7 +118,7 @@ namespace hutel.Middleware
             if (session.Expiration < DateTime.UtcNow)
             {
                 _logger.LogInformation(
-                    LoggingEvents.SESSION_EXPIRED,
+                    LoggingEvents.SessionExpired,
                     null,
                     "Session expiration time: {0}, now: {1}, redirecting to auth",
                     session.Expiration,
@@ -133,7 +131,7 @@ namespace hutel.Middleware
             if (token == null)
             {
                 _logger.LogInformation(
-                    LoggingEvents.SESSION_EXPIRED,
+                    LoggingEvents.SessionExpired,
                     null,
                     "Token is null, redirecting to auth");
                 httpContext.Response.Redirect(authEndpointWithHint);
@@ -142,7 +140,7 @@ namespace hutel.Middleware
             if (session.Expiration < DateTime.UtcNow + _expirationTimeThreshold)
             {
                 _logger.LogInformation(
-                    LoggingEvents.SESSION_EXPIRED,
+                    LoggingEvents.SessionExpired,
                     null,
                     "Session expiration time: {0}, threshold: {1}, renewing the expiration time without redirect",
                     session.Expiration,
@@ -162,9 +160,9 @@ namespace hutel.Middleware
         }
     }
 
-    public class LoggingEvents
+    public static class LoggingEvents
     {
-        public const int SESSION_EXPIRED = 1000;
+        public const int SessionExpired = 1000;
     }
     
     public static class GoogleAuthMiddlewareExtensions

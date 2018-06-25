@@ -1,29 +1,42 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Drive.v2;
 using GoogleFile = Google.Apis.Drive.v2.Data.File;
 using ParentReference = Google.Apis.Drive.v2.Data.ParentReference;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Auth.OAuth2.Flows;
 
 namespace hutel.Storage
 {
-    public class GoogleDriveFileStorageClient: IFileStorageClient
+    public class GoogleDriveFileStorageClient: IFileStorageClient, IDisposable
     {
         private const string _applicationName = "Human Telemetry";
         private const string _rootFolderName = "Hutel";
         private const string _folderMimeType = "application/vnd.google-apps.folder";
         private bool _initialized = false;
         private readonly string _userId;
+        private GoogleHttpClientInitializer _httpClientInitializer;
         private DriveService _driveService;
         private string _rootFolderId;
 
         public GoogleDriveFileStorageClient(string userId)
         {
             _userId = userId;
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this._driveService?.Dispose();
+                this._httpClientInitializer?.Dispose();
+            }
         }
 
         public async Task<string> ReadAllAsync(string path)
@@ -141,11 +154,11 @@ namespace hutel.Storage
         private async Task Init()
         {
             Console.WriteLine("Init");
-            var HttpClientInitializer = new GoogleHttpClientInitializer(_userId);
+            _httpClientInitializer = new GoogleHttpClientInitializer(_userId);
             _driveService = new DriveService(
                 new DriveService.Initializer
                 {
-                    HttpClientInitializer = HttpClientInitializer,
+                    HttpClientInitializer = _httpClientInitializer,
                     ApplicationName = _applicationName
                 }
             );

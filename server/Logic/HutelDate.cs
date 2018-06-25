@@ -14,9 +14,9 @@ namespace hutel.Logic
             DateTime = DateTime.ParseExact(date, _format, CultureInfo.InvariantCulture);
         }
 
-        override public bool Equals(Object other)
+        override public bool Equals(Object obj)
         {
-            return other is HutelDate && DateTime == ((HutelDate)other).DateTime;
+            return obj is HutelDate && DateTime == ((HutelDate)obj).DateTime;
         }
 
         override public int GetHashCode()

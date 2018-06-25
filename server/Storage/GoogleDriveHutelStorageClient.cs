@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ using ParentReference = Google.Apis.Drive.v2.Data.ParentReference;
 
 namespace hutel.Storage
 {
-    public class GoogleDriveHutelStorageClient : IHutelStorageClient
+    public class GoogleDriveHutelStorageClient : IHutelStorageClient, IDisposable
     {
         private const string ApplicationName = "Human Telemetry";
         private const string RootFolderName = "Hutel";
@@ -39,6 +40,20 @@ namespace hutel.Storage
             _userId = userId;
             _initialized = false;
             _logger = Program.LoggerFactory.CreateLogger<GoogleDriveHutelStorageClient>();
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this._driveService.Dispose();
+            }
         }
 
         public async Task<string> ReadPointsAsStringAsync()
@@ -182,7 +197,7 @@ namespace hutel.Storage
             if (!_pointsLastBackupDate.HasValue ||
                 (DateTime.UtcNow - _pointsLastBackupDate.Value).Days >= 1)
             {
-                var backupDateString = DateTime.Now.ToString("yyyy-MM-dd");
+                var backupDateString = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
                 var backupFileName = $"{PointsFileBaseName}-{backupDateString}.json";
                 await CopyFileAsync(_pointsFileId, backupFileName);
             }
@@ -193,7 +208,7 @@ namespace hutel.Storage
             if (!_tagsLastBackupDate.HasValue ||
                 (DateTime.UtcNow - _tagsLastBackupDate.Value).Days >= 1)
             {
-                var backupDateString = DateTime.Now.ToString("yyyy-MM-dd");
+                var backupDateString = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
                 var backupFileName = $"{TagsFileBaseName}-{backupDateString}.json";
                 await CopyFileAsync(_tagsFileId, backupFileName);
             }
@@ -204,7 +219,7 @@ namespace hutel.Storage
             if (!_chartsLastBackupDate.HasValue ||
                 (DateTime.UtcNow - _chartsLastBackupDate.Value).Days >= 1)
             {
-                var backupDateString = DateTime.Now.ToString("yyyy-MM-dd");
+                var backupDateString = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
                 var backupFileName = $"{ChartsFileBaseName}-{backupDateString}.json";
                 await CopyFileAsync(_chartsFileId, backupFileName);
             }
@@ -214,7 +229,7 @@ namespace hutel.Storage
             string name, string mimeType, string parent)
         {
             var listRequest = _driveService.Files.List();
-            var parentId = parent != null ? parent : "root";
+            var parentId = parent ?? "root";
             var mimeQuery = mimeType != null ? $"mimeType = '{mimeType}' and " : "";
             listRequest.Q = mimeQuery + $"title = '{name}' and '{parentId}' in parents";
             listRequest.Spaces = "drive";
@@ -232,7 +247,7 @@ namespace hutel.Storage
 
         private async Task<GoogleFile> CreateFileAsync(string name, string mimeType, string parent)
         {
-            var parentId = parent != null ? parent : "root";
+            var parentId = parent ?? "root";
             var fileMetadata = new GoogleFile
             {
                 Title = name,

@@ -1,14 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace hutel.Storage
 {
-    public class GoogleDriveWritebackHutelStorageClient : IHutelStorageClient
+    public class GoogleDriveWritebackHutelStorageClient : IHutelStorageClient, IDisposable
     {
         private static readonly TimeSpan FlushPeriod = TimeSpan.FromSeconds(10);
         private string _chartsCache;
@@ -28,6 +25,23 @@ namespace hutel.Storage
             _googleDriveClient = new GoogleDriveHutelStorageClient(userId);
             _logger = Program.LoggerFactory.CreateLogger<GoogleDriveWritebackHutelStorageClient>();
             Task.Run(() => FlushLoop());
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose (bool disposing)
+        {
+            if (disposing)
+            {
+                this._chartsCacheLock.Dispose();
+                this._pointsCacheLock.Dispose();
+                this._tagsCacheLock.Dispose();
+                this._googleDriveClient.Dispose();
+            }
         }
 
         private async Task FlushLoop()

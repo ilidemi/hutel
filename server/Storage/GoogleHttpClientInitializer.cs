@@ -10,7 +10,7 @@ using Google.Apis.Http;
 
 namespace hutel.Storage
 {
-    public class GoogleHttpClientInitializer : IConfigurableHttpClientInitializer, IHttpExecuteInterceptor, IHttpUnsuccessfulResponseHandler
+    public class GoogleHttpClientInitializer : IConfigurableHttpClientInitializer, IHttpExecuteInterceptor, IHttpUnsuccessfulResponseHandler, IDisposable
     {
         private const string _envGoogleClientId = "GOOGLE_CLIENT_ID";
         private const string _envGoogleClientSecret = "GOOGLE_CLIENT_SECRET";
@@ -18,7 +18,7 @@ namespace hutel.Storage
         private readonly GoogleAuthorizationCodeFlow _flow;
         private readonly string _clientId;
         private readonly string _clientSecret;
-        private string _userId;
+        private readonly string _userId;
 
         public GoogleHttpClientInitializer(string userId)
         {
@@ -37,6 +37,20 @@ namespace hutel.Storage
                 }
             );
             _userId = userId;
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this._flow.Dispose();
+            }
         }
 
         public void Initialize(ConfigurableHttpClient httpClient)

@@ -28,9 +28,7 @@ namespace hutel.Controllers
         }
         private const string _envUseGoogleStorage = "HUTEL_USE_GOOGLE_STORAGE";
         private const string _envUseGoogleDrive = "HUTEL_USE_GOOGLE_DRIVE";
-        private const string _envUseGoogleDriveWriteback = "HUTEL_USE_GOOGLE_DRIVE_WRITEBACK";    
-        private const string _pointsKey = "points";
-        private const string _tagsKey = "tags";
+        private const string _envUseGoogleDriveWriteback = "HUTEL_USE_GOOGLE_DRIVE_WRITEBACK";
         private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings
         { 
             NullValueHandling = NullValueHandling.Ignore,
@@ -109,7 +107,7 @@ namespace hutel.Controllers
         [HttpPut("/api/points")]
         [ValidateModelState]
         public async Task<IActionResult> PutAllPoints(
-            [FromBody]PointsStorageDataContract replacementPoints)
+            [FromBody]StoredPointDataContractCollection replacementPoints)
         {
             var tags = await ReadTagsSafe();
             await pointsLock.WaitAsync();
@@ -210,7 +208,7 @@ namespace hutel.Controllers
                     return new BadRequestObjectResult(ex.ToString());
                 }
 
-                if (string.Compare(point.TagId, points[id].TagId, true) != 0) {
+                if (string.Compare(point.TagId, points[id].TagId, StringComparison.OrdinalIgnoreCase) != 0) {
                     return new BadRequestObjectResult(
                         new ArgumentOutOfRangeException(
                             $"Tag id differs from the known one. " +
@@ -385,9 +383,9 @@ namespace hutel.Controllers
             var userId = (string)HttpContext.Items["UserId"];
             var pointsString = await _storageClient.ReadPointsAsStringAsync();
             
-            var pointsDataContractList = pointsString == string.Empty
-                ? new PointsStorageDataContract()
-                : JsonConvert.DeserializeObject<PointsStorageDataContract>(pointsString);
+            var pointsDataContractList = string.IsNullOrEmpty(pointsString)
+                ? new StoredPointDataContractCollection()
+                : JsonConvert.DeserializeObject<StoredPointDataContractCollection>(pointsString);
 
             var duplicatePoints = pointsDataContractList
                 .GroupBy(point => point.Id)
@@ -436,7 +434,7 @@ namespace hutel.Controllers
             var tagsDataContractList =
                 JsonConvert.DeserializeObject<List<TagDataContract>>(tagsString);
 
-            if (tagsString == string.Empty || !tagsDataContractList.Any())
+            if (string.IsNullOrEmpty(tagsString) || !tagsDataContractList.Any())
             {
                 throw new InvalidOperationException("Tags list is empty");
             }
