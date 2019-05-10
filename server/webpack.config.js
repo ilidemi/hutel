@@ -14,7 +14,7 @@ module.exports = (env) => {
             filename: '[name].js',
             publicPath: '/dist/'
         },
-        devtool: 'source-map',
+        devtool: 'eval',
         module: {
             rules: [
                 { test: /\.jsx?$/, include: /ViewModels/, use: 'babel-loader' },
