@@ -70,7 +70,7 @@ class Calendar extends React.Component {
     const pointStyle = {
       borderRadius: '50%',
       background: '#ff6f00',
-      margin: '20%'
+      margin: '15%'
     };
     const defaultCellStyle = {
       display: 'flex',
@@ -114,18 +114,22 @@ class Calendar extends React.Component {
         this.renderCell(day.date(), dayKey, hasPoint, isToday)
       );
     }
+    const containerStyle = {
+      margin: '20px'
+    };
     const gridStyle = {
       display: 'grid',
       gridTemplateColumns: 'repeat(7, 1fr)',
       width: '100%',
       maxWidth: '500px',
-      margin: 'auto',
-      padding: '30px'
+      margin: 'auto'
     };
     return (
       <div>
         <Divider />
-        <div style={gridStyle}>{items}</div>
+        <div style={containerStyle}>
+          <div style={gridStyle}>{items}</div>
+        </div>
         <Divider />
       </div>
     );
