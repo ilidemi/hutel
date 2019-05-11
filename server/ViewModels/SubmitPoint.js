@@ -21,6 +21,7 @@ import StringInput from './FieldInput/StringInput';
 import DateInput from './FieldInput/DateInput';
 import TimeInput from './FieldInput/TimeInput';
 import EnumInput from './FieldInput/EnumInput';
+import Calendar from './Calendar';
 import PointsHistory from './PointsHistory';
 
 class SubmitPoint extends React.Component {
@@ -170,6 +171,7 @@ class SubmitPoint extends React.Component {
           </div>
           {loadingIndicator}
         </div>
+        <Calendar tagId={this.props.tag.id} />
         <PointsHistory
           points={this.props.points}
           theme={this.props.theme}
