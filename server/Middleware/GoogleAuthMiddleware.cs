@@ -46,8 +46,7 @@ namespace hutel.Middleware
                 $"&redirect_uri={redirectUri}" +
                 $"&response_type=code" +
                 $"&scope=openid+profile+email+https://www.googleapis.com/auth/userinfo.profile+https://www.googleapis.com/auth/drive" +
-                $"&access_type=offline" +
-                $"&prompt=consent";
+                $"&access_type=offline";
 
             if (httpContext.Request.Path == "/login")
             {
