@@ -47,6 +47,7 @@ namespace hutel.Middleware
                 $"&response_type=code" +
                 $"&scope=openid+profile+email+https://www.googleapis.com/auth/userinfo.profile+https://www.googleapis.com/auth/drive" +
                 $"&access_type=offline";
+            var promptQuery = "&prompt=consent";
 
             if (httpContext.Request.Path == "/login")
             {
@@ -99,7 +100,7 @@ namespace hutel.Middleware
                     LoggingEvents.SessionExpired,
                     null,
                     "No session id in cookie, redirecting to auth");
-                httpContext.Response.Redirect(authEndpoint);
+                httpContext.Response.Redirect(authEndpoint + promptQuery);
                 return;
             }
             var sessionId = httpContext.Request.Cookies[_sessionCookieKey];
@@ -127,13 +128,15 @@ namespace hutel.Middleware
                 return;
             }
             var token = await _tokenClient.GetAsync(session.UserId);
-            if (token == null)
+            if (token == null || token.RefreshToken == null)
             {
                 _logger.LogInformation(
                     LoggingEvents.SessionExpired,
                     null,
-                    "Token is null, redirecting to auth");
-                httpContext.Response.Redirect(authEndpointWithHint);
+                    "Token is {0}, RefreshToken is {1}, redirecting to auth",
+                    token,
+                    token?.RefreshToken);
+                httpContext.Response.Redirect(authEndpointWithHint + promptQuery);
                 return;
             }
             if (session.Expiration < DateTime.UtcNow + _expirationTimeThreshold)
