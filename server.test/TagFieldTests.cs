@@ -17,7 +17,7 @@ namespace hutel.Tests
                 new TagFieldDataContract
                 {
                     Name = EnumFieldName,
-                    Type = TagFieldConstants.Enum,
+                    Type = TagFieldConstants.EnumType,
                     Values =  new List<string>()
                 }));
         }

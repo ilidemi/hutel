@@ -12,7 +12,7 @@ namespace hutel.Logic
         public const string StringType = "string";
         public const string DateType = "date";
         public const string TimeType = "time";
-        public const string Type = "enum";
+        public const string EnumType = "enum";
     }
 
     public abstract class BaseTagField
@@ -189,7 +189,7 @@ namespace hutel.Logic
 
     public class EnumTagField : BaseTagField
     {
-        public override string TypeString { get { return TagFieldConstants.Type; } }
+        public override string TypeString { get { return TagFieldConstants.EnumType; } }
 
         public ICollection<string> Values
         {

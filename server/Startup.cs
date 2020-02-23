@@ -1,12 +1,10 @@
 using System;
-using System.IO;
 using hutel.Filters;
 using hutel.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -23,8 +21,8 @@ namespace hutel
         public void ConfigureServices(IServiceCollection services)
         {
             services
-                .AddMvc()
-                .AddJsonOptions(opt =>
+                .AddRazorPages()
+                .AddNewtonsoftJson(opt =>
                 {
                     opt.SerializerSettings.DateParseHandling = DateParseHandling.None;
                     opt.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
@@ -33,14 +31,12 @@ namespace hutel
                         new CamelCasePropertyNamesContractResolver();
                 });
             services.AddScoped<ValidateModelStateAttribute>();
+            services.AddLogging(opt => opt.AddConsole());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            loggerFactory.AddConsole(LogLevel.Trace);
-            Program.LoggerFactory = loggerFactory;
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -55,7 +51,9 @@ namespace hutel
             {
                 app.UseGoogleAuthMiddleware();
             }
-            app.UseMvc();
+            app.UseRouting();
+            app.UseAuthorization();
+            app.UseEndpoints(endpoints => endpoints.MapRazorPages());
         }
     }
 }

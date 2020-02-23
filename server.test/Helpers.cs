@@ -12,7 +12,7 @@ namespace hutel.Tests
             var fieldDataContract = new TagFieldDataContract
             {
                 Name = IntFieldName,
-                Type = TagFieldConstants.Int
+                Type = TagFieldConstants.IntType
             };
             return new IntTagField(fieldDataContract);
         }
@@ -22,7 +22,7 @@ namespace hutel.Tests
             var fieldDataContract = new TagFieldDataContract
             {
                 Name = FloatFieldName,
-                Type = TagFieldConstants.Float
+                Type = TagFieldConstants.FloatType
             };
             return new FloatTagField(fieldDataContract);
         }
@@ -32,7 +32,7 @@ namespace hutel.Tests
             var fieldDataContract = new TagFieldDataContract
             {
                 Name = StringFieldName,
-                Type = TagFieldConstants.String
+                Type = TagFieldConstants.StringType
             };
             return new StringTagField(fieldDataContract);
         }
@@ -42,7 +42,7 @@ namespace hutel.Tests
             var fieldDataContract = new TagFieldDataContract
             {
                 Name = DateFieldName,
-                Type = TagFieldConstants.Date
+                Type = TagFieldConstants.DateType
             };
             return new DateTagField(fieldDataContract);
         }
@@ -52,7 +52,7 @@ namespace hutel.Tests
             var fieldDataContract = new TagFieldDataContract
             {
                 Name = TimeFieldName,
-                Type = TagFieldConstants.Time
+                Type = TagFieldConstants.TimeType
             };
             return new TimeTagField(fieldDataContract);
         }
@@ -62,7 +62,7 @@ namespace hutel.Tests
             var fieldDataContract = new TagFieldDataContract
             {
                 Name = EnumFieldName,
-                Type = TagFieldConstants.Enum,
+                Type = TagFieldConstants.EnumType,
                 Values = new List<string>{ EnumValueA, EnumValueB }
             };
             return new EnumTagField(fieldDataContract);

@@ -19,27 +19,27 @@ namespace hutel.Tests
                 'fields': [
                     {{
                         'name': '{IntFieldName}',
-                        'type': '{TagFieldConstants.Int}'
+                        'type': '{TagFieldConstants.IntType}'
                     }},
                     {{
                         'name': '{FloatFieldName}',
-                        'type': '{TagFieldConstants.Float}'
+                        'type': '{TagFieldConstants.FloatType}'
                     }},
                     {{
                         'name': '{StringFieldName}',
-                        'type': '{TagFieldConstants.String}'
+                        'type': '{TagFieldConstants.StringType}'
                     }},
                     {{
                         'name': '{DateFieldName}',
-                        'type': '{TagFieldConstants.Date}'
+                        'type': '{TagFieldConstants.DateType}'
                     }},
                     {{
                         'name': '{TimeFieldName}',
-                        'type': '{TagFieldConstants.Time}'
+                        'type': '{TagFieldConstants.TimeType}'
                     }},
                     {{
                         'name': '{EnumFieldName}',
-                        'type': '{TagFieldConstants.Enum}',
+                        'type': '{TagFieldConstants.EnumType}',
                         'values': [
                             '{EnumValueA}',
                             '{EnumValueB}'
@@ -49,7 +49,7 @@ namespace hutel.Tests
             }}";
             var tagDataContract = JsonConvert.DeserializeObject<TagDataContract>(json);
             var tag = Tag.FromDataContract(tagDataContract);
-            Assert.Equal(tag.Id, "completeTag");
+            Assert.Equal("completeTag", tag.Id);
             Assert.Contains(IntFieldName, tag.Fields.Keys);
             Assert.IsType<IntTagField>(tag.Fields[IntFieldName]);
             Assert.Contains(FloatFieldName, tag.Fields.Keys);
@@ -73,7 +73,7 @@ namespace hutel.Tests
             var json = "{ 'id': 'id', 'fields': [] }";
             var tagDataContract = JsonConvert.DeserializeObject<TagDataContract>(json);
             var tag = Tag.FromDataContract(tagDataContract);
-            Assert.Equal(tag.Id, "id");
+            Assert.Equal("id", tag.Id);
             Assert.Empty(tag.Fields);
         }
 
@@ -106,7 +106,7 @@ namespace hutel.Tests
                 'fields': [
                     {{
                         'name': '{fieldName}',
-                        'type': '{TagFieldConstants.Int}'
+                        'type': '{TagFieldConstants.IntType}'
                     }}
                 ]
             }}";
