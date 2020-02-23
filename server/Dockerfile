@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1
+FROM mcr.microsoft.com/dotnet/core/runtime:3.1-buster
 COPY . /app
 WORKDIR /app
 EXPOSE 5000/tcp
