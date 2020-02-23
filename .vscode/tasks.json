@@ -8,7 +8,7 @@
             "type": "shell",
             "args": [
                 "build",
-                "${workspaceRoot}\\server.test\\server.test.csproj"
+                "${workspaceRoot}\\server\\server.csproj"
             ],
             "group": {
                 "kind": "build",
