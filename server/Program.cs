@@ -7,8 +7,6 @@ namespace hutel
 {
     public static class Program
     {
-        public static ILoggerFactory LoggerFactory { get; set; }
-
         public static void Main(string[] args)
         {
            var config = new ConfigurationBuilder()

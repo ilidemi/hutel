@@ -35,11 +35,11 @@ namespace hutel.Storage
         private DateTime? _chartsLastBackupDate;
         private ILogger _logger;
         
-        public GoogleDriveHutelStorageClient(string userId)
+        public GoogleDriveHutelStorageClient(string userId, ILoggerFactory loggerFactory)
         {
             _userId = userId;
             _initialized = false;
-            _logger = Program.LoggerFactory.CreateLogger<GoogleDriveHutelStorageClient>();
+            _logger = loggerFactory.CreateLogger<GoogleDriveHutelStorageClient>();
         }
 
         public void Dispose()

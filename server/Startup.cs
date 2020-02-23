@@ -21,7 +21,7 @@ namespace hutel
         public void ConfigureServices(IServiceCollection services)
         {
             services
-                .AddRazorPages()
+                .AddMvc()
                 .AddNewtonsoftJson(opt =>
                 {
                     opt.SerializerSettings.DateParseHandling = DateParseHandling.None;
@@ -53,7 +53,11 @@ namespace hutel
             }
             app.UseRouting();
             app.UseAuthorization();
-            app.UseEndpoints(endpoints => endpoints.MapRazorPages());
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapRazorPages();
+            });
         }
     }
 }

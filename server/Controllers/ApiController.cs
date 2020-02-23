@@ -39,7 +39,7 @@ namespace hutel.Controllers
         private static SemaphoreSlim chartsLock = new SemaphoreSlim(1);
         private static SemaphoreSlim pointsLock = new SemaphoreSlim(1);
 
-        public ApiController(ILogger<ApiController> logger)
+        public ApiController(ILoggerFactory loggerFactory)
         {
             if (Environment.GetEnvironmentVariable(_envUseGoogleDriveWriteback) == "1")
             {
@@ -48,7 +48,8 @@ namespace hutel.Controllers
                     var userId = (string)HttpContext.Items["UserId"];
                     if (!_storageClientByUserId.ContainsKey(userId))
                     {
-                        _storageClientByUserId[userId] = new GoogleDriveWritebackHutelStorageClient(userId);
+                        _storageClientByUserId[userId] = new GoogleDriveWritebackHutelStorageClient(
+                            userId, loggerFactory);
                     }
                     return _storageClientByUserId[userId];
                 });
@@ -58,7 +59,7 @@ namespace hutel.Controllers
                 _storageClientLazy = new Lazy<IHutelStorageClient>(() =>
                 {
                     var userId = (string)HttpContext.Items["UserId"];
-                    return new GoogleDriveHutelStorageClient(userId);
+                    return new GoogleDriveHutelStorageClient(userId, loggerFactory);
                 });
             }
             else if (Environment.GetEnvironmentVariable(_envUseGoogleStorage) == "1")
@@ -72,7 +73,7 @@ namespace hutel.Controllers
                     new FileHutelStorageClient(new LocalFileStorageClient()));
             }
 
-            _logger = logger;
+            _logger = loggerFactory.CreateLogger<ApiController>();
         }
 
         [HttpGet("/api/points")]

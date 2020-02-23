@@ -20,10 +20,10 @@ namespace hutel.Storage
         private GoogleDriveHutelStorageClient _googleDriveClient;
         private ILogger<GoogleDriveWritebackHutelStorageClient> _logger;
 
-        public GoogleDriveWritebackHutelStorageClient(string userId)
+        public GoogleDriveWritebackHutelStorageClient(string userId, ILoggerFactory loggerFactory)
         {
-            _googleDriveClient = new GoogleDriveHutelStorageClient(userId);
-            _logger = Program.LoggerFactory.CreateLogger<GoogleDriveWritebackHutelStorageClient>();
+            _googleDriveClient = new GoogleDriveHutelStorageClient(userId, loggerFactory);
+            _logger = loggerFactory.CreateLogger<GoogleDriveWritebackHutelStorageClient>();
             Task.Run(() => FlushLoop());
         }
 
