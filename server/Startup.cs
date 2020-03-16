@@ -16,8 +16,13 @@ namespace hutel
         private const string _envUseBasicAuth = "HUTEL_USE_BASIC_AUTH";
         private const string _envUseGoogleAuth = "HUTEL_USE_GOOGLE_AUTH";
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        private IWebHostEnvironment _environment;
+
+        public Startup(IWebHostEnvironment env)
+        {
+            this._environment = env;
+        }
+        
         public void ConfigureServices(IServiceCollection services)
         {
             services
@@ -32,6 +37,11 @@ namespace hutel
                 });
             services.AddScoped<ValidateModelStateAttribute>();
             services.AddLogging(opt => opt.AddConsole());
+
+            if (this._environment.IsProduction())
+            {
+                services.AddLetsEncrypt();
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
