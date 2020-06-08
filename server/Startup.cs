@@ -40,7 +40,7 @@ namespace hutel
 
             if (this._environment.IsProduction())
             {
-                services.AddLetsEncrypt();
+                services.AddLettuceEncrypt();
             }
         }
 
