@@ -174,6 +174,8 @@ class SubmitPoint extends React.Component {
         <Calendar tagId={this.props.tag.id} />
         <PointsHistory
           points={this.props.points}
+          tagsById={this.props.tagsById}
+          sensitiveHidden={this.props.sensitiveHidden}
           theme={this.props.theme}
           notifyPointsChanged={this.props.notifyPointsChanged}
         />
@@ -185,6 +187,8 @@ class SubmitPoint extends React.Component {
 SubmitPoint.propTypes = {
   tag: PropTypes.object,
   points: PropTypes.array,
+  tagsById: PropTypes.object,
+  sensitiveHidden: PropTypes.bool,
   history: PropTypes.object,
   theme: PropTypes.object,
   notifyPointsChanged: PropTypes.func

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import AppBar from 'material-ui/AppBar';
 import Divider from 'material-ui/Divider';
+import FontIcon from 'material-ui/FontIcon';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
@@ -25,7 +26,7 @@ class Home extends React.Component {
   onEditRawPointsClick() {
     this.props.history.push('/edit/points');
   }
-  
+
   onEditRawChartsClick() {
     this.props.history.push('/edit/charts');
   }
@@ -42,8 +43,8 @@ class Home extends React.Component {
                 iconButtonElement={
                   <IconButton><MoreVertIcon /></IconButton>
                 }
-                targetOrigin={{horizontal: 'right', vertical: 'top'}}
-                anchorOrigin={{horizontal: 'right', vertical: 'top'}}
+                targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
               >
                 <MenuItem
                   primaryText="Edit raw tags"
@@ -61,12 +62,25 @@ class Home extends React.Component {
                   primaryText="Reload from storage"
                   onTouchTap={this.props.reloadFromStorageCallback}
                 />
+                <MenuItem
+                  primaryText="Hide sensitive"
+                  leftIcon={
+                    <FontIcon
+                      className="material-icons"
+                      style={{ fontSize: 20 }}
+                    >
+                      {this.props.sensitiveHidden ? "check_box" : "check_box_outline_blank"}
+                    </FontIcon>
+                  }
+                  onTouchTap={this.props.toggleSensitiveHiddenCallback}
+                />
               </IconMenu>
             }
           />
         </MuiThemeProvider>
         <SelectTag
           tags={this.props.tags}
+          sensitiveHidden={this.props.sensitiveHidden}
           history={this.props.history}
           theme={this.props.theme}
         />
@@ -78,20 +92,25 @@ class Home extends React.Component {
         <Divider />
         <PointsHistory
           points={this.props.points}
+          tagsById={this.props.tagsById}
+          sensitiveHidden={this.props.sensitiveHidden}
           theme={this.props.theme}
           notifyPointsChanged={this.props.notifyPointsChanged}
         />
-      </div>
+      </div >
     );
   }
 }
 
 Home.propTypes = {
   tags: PropTypes.array,
+  tagsById: PropTypes.object,
   points: PropTypes.array,
   charts: PropTypes.array,
   chartsPoints: PropTypes.array,
+  sensitiveHidden: PropTypes.bool,
   reloadFromStorageCallback: PropTypes.func,
+  toggleSensitiveHiddenCallback: PropTypes.func,
   notifyPointsChanged: PropTypes.func,
   history: PropTypes.object,
   theme: PropTypes.object

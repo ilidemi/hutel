@@ -11,6 +11,8 @@ namespace hutel.Storage
         private const string TagsBackupFileName = "tags.json.bak";
         private const string ChartsFileName = "charts.json";
         private const string ChartsBackupFileName = "charts.json.bak";
+        private const string SettingsFileName = "settings.json";
+        private const string SettingsBackupFileName = "settings.json.bak";
         private readonly IFileStorageClient _fileStorageClient;
         
         public FileHutelStorageClient(IFileStorageClient fileStorageClient)
@@ -46,6 +48,16 @@ namespace hutel.Storage
         public async Task WriteChartsAsStringAsync(string data)
         {
             await WriteFileAsync(ChartsFileName, ChartsBackupFileName, data);
+        }
+
+        public async Task<string> ReadSettingsAsStringAsync()
+        {
+            return await ReadFileAsync(SettingsFileName);
+        }
+
+        public async Task WriteSettingsAsStringAsync(string data)
+        {
+            await WriteFileAsync(SettingsFileName, SettingsBackupFileName, data);
         }
 
         public Task Reload()

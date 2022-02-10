@@ -8,7 +8,7 @@ import moment from 'moment';
 import Divider from 'material-ui/Divider';
 import FontIcon from 'material-ui/FontIcon';
 import IconButton from 'material-ui/IconButton';
-import {List, ListItem} from 'material-ui/List';
+import { List, ListItem } from 'material-ui/List';
 import Subheader from 'material-ui/Subheader';
 
 class PointsHistory extends React.Component {
@@ -23,7 +23,7 @@ class PointsHistory extends React.Component {
       clearTimeout(pointState.timer);
     }
   }
-  
+
   humanizeDate(value) {
     var date = moment(value);
     var age = moment.duration(moment().diff(date));
@@ -48,22 +48,22 @@ class PointsHistory extends React.Component {
       });
     };
   }
-  
+
   deletePoint(pointId) {
     console.log("Deleting point", pointId);
-    this.setState(this.pointStateUpdater(pointId, {loading: true}),
+    this.setState(this.pointStateUpdater(pointId, { loading: true }),
       () => {
         $.ajax({
           url: "/api/points/" + pointId,
           method: "DELETE",
           success: () => {
             this.setState(
-              this.pointStateUpdater(pointId, {loading: false}),
+              this.pointStateUpdater(pointId, { loading: false }),
               () => this.props.notifyPointsChanged());
           },
           error: (xhr, status, err) => {
             console.error(err);
-            this.setState(this.pointStateUpdater(pointId, {loading: false}));
+            this.setState(this.pointStateUpdater(pointId, { loading: false }));
           }
         });
       });
@@ -77,9 +77,9 @@ class PointsHistory extends React.Component {
 
     var timer = setTimeout(() => {
       this.setState(this.pointStateUpdater(pointId, {
-          deleteButtonVisible: false,
-          timer: null
-        }));
+        deleteButtonVisible: false,
+        timer: null
+      }));
     }, 3000);
 
     this.setState(this.pointStateUpdater(pointId, {
@@ -104,7 +104,7 @@ class PointsHistory extends React.Component {
       flexDirection: "column",
       background: this.props.theme.historyBackground
     };
-    
+
     if (this.props.points.length === 0) {
       return (
         <div style={style}>
@@ -118,10 +118,12 @@ class PointsHistory extends React.Component {
       const listItemStyle = {
         fontWeight: 500
       };
-      var pointsByDate = this.props.points.reduce((acc, point) => {
-        (acc[point.date] = acc[point.date] || []).push(point);
-        return acc;
-      }, {});
+      var pointsByDate = this.props.points
+        .filter(point => !this.props.sensitiveHidden || !this.props.tagsById[point.tagId].isSensitive)
+        .reduce((acc, point) => {
+          (acc[point.date] = acc[point.date] || []).push(point);
+          return acc;
+        }, {});
       var historyItems = Object.entries(pointsByDate)
         .map(([date, points]) => {
           var dateItems = points.map(point => {
@@ -133,27 +135,27 @@ class PointsHistory extends React.Component {
             var pointState = this.state[point.id];
             var loading = pointState && pointState.loading;
             var deleteButtonVisible = pointState && pointState.deleteButtonVisible;
-            
+
             const loadingIconStyle = {
               fontSize: 20
             };
 
             var loadingIcon = loading
               ? <FontIcon
-                  className="material-icons"
-                  style={loadingIconStyle}
-                >
-                  hourglass_empty
-                </FontIcon>
+                className="material-icons"
+                style={loadingIconStyle}
+              >
+                hourglass_empty
+              </FontIcon>
               : undefined;
 
             var deleteButton = !loading && deleteButtonVisible
               ? <IconButton
-                  iconClassName="material-icons"
-                  onClick={this.deletePoint.bind(this, point.id)}
-                >
-                  delete
-                </IconButton>
+                iconClassName="material-icons"
+                onClick={this.deletePoint.bind(this, point.id)}
+              >
+                delete
+              </IconButton>
               : undefined;
 
             return (
@@ -188,6 +190,8 @@ class PointsHistory extends React.Component {
 
 PointsHistory.propTypes = {
   points: PropTypes.array.isRequired,
+  tagsById: PropTypes.object.isRequired,
+  sensitiveHidden: PropTypes.bool,
   theme: PropTypes.object,
   notifyPointsChanged: PropTypes.func
 };

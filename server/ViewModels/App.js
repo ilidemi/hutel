@@ -26,10 +26,12 @@ class App extends React.Component {
       points: [],
       charts: [],
       chartsPoints: [],
+      settings: {},
       pointsLoading: true,
       tagsLoading: true,
       chartsLoading: true,
       chartsPointsLeftToLoad: 0,
+      settingsLoading: true,
       fromStorageLoading: false
     };
   }
@@ -38,10 +40,11 @@ class App extends React.Component {
     this.updatePoints();
     this.updateTags();
     this.updateCharts();
+    this.updateSettings();
   }
 
   updatePoints() {
-    this.setState({pointsLoading: true}, () => {
+    this.setState({ pointsLoading: true }, () => {
       $.ajax({
         url: "/api/points",
         data: {
@@ -50,35 +53,35 @@ class App extends React.Component {
         dataType: 'json',
         cache: false,
         success: (data) => {
-          this.setState({points: data, pointsLoading: false});
+          this.setState({ points: data, pointsLoading: false });
         },
         error: (xhr, status, err) => {
           console.error(err);
-          this.setState({pointsLoading: false});
+          this.setState({ pointsLoading: false });
         }
       });
     });
   }
 
   updateTags() {
-    this.setState({tagsLoading: true}, () => {
+    this.setState({ tagsLoading: true }, () => {
       $.ajax({
         url: "/api/tags",
         dataType: "json",
         cache: false,
         success: (data) => {
-          this.setState({tags: data, tagsLoading: false});
+          this.setState({ tags: data, tagsLoading: false });
         },
         error: (xhr, status, err) => {
           console.log(err);
-          this.setState({tagsLoading: false});
+          this.setState({ tagsLoading: false });
         }
       });
     });
   }
-  
+
   updateCharts() {
-    this.setState({chartsLoading: true}, () => {
+    this.setState({ chartsLoading: true }, () => {
       $.ajax({
         url: "/api/charts",
         dataType: "json",
@@ -92,7 +95,7 @@ class App extends React.Component {
         },
         error: (xhr, status, err) => {
           console.error(err);
-          this.setState({chartsLoading: false});
+          this.setState({ chartsLoading: false });
         }
       });
     });
@@ -130,8 +133,25 @@ class App extends React.Component {
     });
   }
 
+  updateSettings() {
+    this.setState({ settingsLoading: true }, () => {
+      $.ajax({
+        url: "/api/settings",
+        dataType: "json",
+        cache: false,
+        success: (data) => {
+          this.setState({ settings: data, settingsLoading: false });
+        },
+        error: (xhr, status, err) => {
+          console.log(err);
+          this.setState({ settingsLoading: false });
+        }
+      });
+    });
+  }
+
   reloadFromStorage() {
-    this.setState({fromStorageLoading: true}, () => {
+    this.setState({ fromStorageLoading: true }, () => {
       $.ajax({
         url: "/api/reload",
         cache: false,
@@ -139,7 +159,8 @@ class App extends React.Component {
           $.when(
             this.updatePoints(),
             this.updateTags(),
-            this.updateCharts()
+            this.updateCharts(),
+            this.updateSettings()
           ).done(
             () => this.setState({
               fromStorageLoading: false,
@@ -148,7 +169,29 @@ class App extends React.Component {
         },
         error: (xhr, status, err) => {
           console.error(err);
-          this.setState({fromStorageLoading: false});
+          this.setState({ fromStorageLoading: false });
+        }
+      });
+    });
+  }
+
+  toggleSensitiveHidden() {
+    let newSettings = { sensitiveHidden: !this.state.settings.sensitiveHidden };
+
+    console.log("Saving settings");
+    this.setState({ settingsLoading: true }, () => {
+      $.ajax({
+        url: "/api/settings",
+        dataType: "json",
+        contentType: "application/json; charset=utf-8",
+        method: "PUT",
+        data: JSON.stringify(newSettings),
+        success: (data) => {
+          this.setState({ settingsLoading: false, settings: data });
+        },
+        error: (xhr, status, err) => {
+          console.error(err);
+          this.setState({ settingsLoading: false });
         }
       });
     });
@@ -195,70 +238,78 @@ class App extends React.Component {
       this.state.pointsLoading ||
       this.state.chartsLoading ||
       this.state.chartsPointsLeftToLoad ||
+      this.state.settingsLoading ||
       this.fromStorageLoading;
+
+    const tagsById = this.state.tags.reduce((acc, tag) => (acc[tag.id] = tag, acc), {})
 
     const body = loading
       ? <Loading theme={theme} />
       : <div>
-          <div>
-            <Route exact path="/" render={(props) => (
-              <Home
-                {...props}
-                tags={this.state.tags}
-                points={this.state.points}
-                charts={this.state.charts}
-                chartsPoints={this.state.chartsPoints}
-                reloadFromStorageCallback={this.reloadFromStorage.bind(this)}
-                notifyPointsChanged={this.onPointsChanged.bind(this)}
-                theme={theme}
-              />
-            )} />
-          </div>
-          <div>
-            <Route path="/submit/:tag" render={(props) => (
-              <SubmitPoint
-                {...props}
-                tag={this.state.tags.find(tag => tag.id === props.match.params.tag)}
-                theme={theme}
-                points={this.state.points}
-                notifyPointsChanged={this.onPointsChanged.bind(this)}
-              />
-            )} />
-          </div>
-          <div>
-            <Route exact path="/edit/tags" render={(props) => (
-              <EditRawData
-                {...props}
-                theme={theme}
-                url={"/api/tags"}
-                title={"Edit Raw Tags"}
-                floatingLabel={"Tags"}
-              />
-            )} />
-          </div>
-          <div>
-            <Route exact path="/edit/points" render={(props) => (
-              <EditRawData
-                {...props}
-                theme={theme}
-                url={"/api/points"}
-                title={"Edit Raw Points"}
-                floatingLabel={"Points"}
-              />
-            )} />
-          </div>
-          <div>
-            <Route exact path="/edit/charts" render={(props) => (
-              <EditRawData
-                {...props}
-                theme={theme}
-                url={"/api/charts"}
-                title={"Edit Raw Charts"}
-                floatingLabel={"Charts"}
-              />
-            )} />
-          </div>
-        </div>;
+        <div>
+          <Route exact path="/" render={(props) => (
+            <Home
+              {...props}
+              tags={this.state.tags}
+              tagsById={tagsById}
+              points={this.state.points}
+              charts={this.state.charts}
+              chartsPoints={this.state.chartsPoints}
+              sensitiveHidden={this.state.settings.sensitiveHidden}
+              reloadFromStorageCallback={this.reloadFromStorage.bind(this)}
+              toggleSensitiveHiddenCallback={this.toggleSensitiveHidden.bind(this)}
+              notifyPointsChanged={this.onPointsChanged.bind(this)}
+              theme={theme}
+            />
+          )} />
+        </div>
+        <div>
+          <Route path="/submit/:tag" render={(props) => (
+            <SubmitPoint
+              {...props}
+              tag={this.state.tags.find(tag => tag.id === props.match.params.tag)}
+              tagsById={tagsById}
+              sensitiveHidden={this.state.settings.sensitiveHidden}
+              theme={theme}
+              points={this.state.points}
+              notifyPointsChanged={this.onPointsChanged.bind(this)}
+            />
+          )} />
+        </div>
+        <div>
+          <Route exact path="/edit/tags" render={(props) => (
+            <EditRawData
+              {...props}
+              theme={theme}
+              url={"/api/tags"}
+              title={"Edit Raw Tags"}
+              floatingLabel={"Tags"}
+            />
+          )} />
+        </div>
+        <div>
+          <Route exact path="/edit/points" render={(props) => (
+            <EditRawData
+              {...props}
+              theme={theme}
+              url={"/api/points"}
+              title={"Edit Raw Points"}
+              floatingLabel={"Points"}
+            />
+          )} />
+        </div>
+        <div>
+          <Route exact path="/edit/charts" render={(props) => (
+            <EditRawData
+              {...props}
+              theme={theme}
+              url={"/api/charts"}
+              title={"Edit Raw Charts"}
+              floatingLabel={"Charts"}
+            />
+          )} />
+        </div>
+      </div>;
     return (
       <HashRouter>
         <MuiThemeProvider muiTheme={muiTheme}>
@@ -266,7 +317,7 @@ class App extends React.Component {
             style={columnStyle}
             zDepth={5}
           >
-          {body}
+            {body}
           </Paper>
         </MuiThemeProvider>
       </HashRouter>

@@ -38,6 +38,7 @@ namespace hutel.Controllers
         private static SemaphoreSlim tagsLock = new SemaphoreSlim(1);
         private static SemaphoreSlim chartsLock = new SemaphoreSlim(1);
         private static SemaphoreSlim pointsLock = new SemaphoreSlim(1);
+        private static SemaphoreSlim settingsLock = new SemaphoreSlim(1);
 
         public ApiController(ILoggerFactory loggerFactory)
         {
@@ -345,6 +346,38 @@ namespace hutel.Controllers
                 chartsLock.Release();
             }
         }
+        
+        [HttpGet("/api/settings")]
+        public async Task<IActionResult> GetSettings()
+        {
+            await settingsLock.WaitAsync();
+            try
+            {
+                var settingsString = await _storageClient.ReadSettingsAsStringAsync();
+                return Content(settingsString, "application/json");
+            }
+            finally
+            {
+                settingsLock.Release();
+            }
+        }
+
+        [HttpPut("/api/settings")]
+        [ValidateModelState]
+        public async Task<IActionResult> PutSettings([FromBody]SettingsDataContract settingsDataContract)
+        {
+            var settingsString = JsonConvert.SerializeObject(settingsDataContract, jsonSettings);
+            await settingsLock.WaitAsync();
+            try
+            {
+                await _storageClient.WriteSettingsAsStringAsync(settingsString);
+                return Content(settingsString, "application/json");
+            }
+            finally
+            {
+                settingsLock.Release();
+            }
+        }
 
         [HttpGet("/api/reload")]
         public async Task<IActionResult> Reload()
@@ -352,6 +385,7 @@ namespace hutel.Controllers
             await chartsLock.WaitAsync();
             await pointsLock.WaitAsync();
             await tagsLock.WaitAsync();
+            await settingsLock.WaitAsync();
             try
             {
                 await _storageClient.Reload();
@@ -361,6 +395,7 @@ namespace hutel.Controllers
                 tagsLock.Release();
                 pointsLock.Release();
                 chartsLock.Release();
+                settingsLock.Release();
             }
             return Ok();
         }

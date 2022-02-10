@@ -271,13 +271,10 @@ __pycache__/
 storage.json
 storage.json.bak
 
-# Tags config
-tags.json
+# Backups
 tags.json.bak
-
-# Charts config
-charts.json
 charts.json.bak
+settings.json.bak
 
 # Webpack bundle
 wwwroot/dist

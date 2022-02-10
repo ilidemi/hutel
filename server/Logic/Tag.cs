@@ -9,6 +9,8 @@ namespace hutel.Logic
     {
         public string Id { get; set; }
 
+        public bool? IsSensitive { get; set; }
+
         public IDictionary<string, BaseTagField> Fields { get; set; }
 
         public static Tag FromDataContract(TagDataContract input)
@@ -48,6 +50,7 @@ namespace hutel.Logic
             return new Tag
             {
                 Id = input.Id,
+                IsSensitive = input.IsSensitive,
                 Fields = tagFields.ToDictionary(
                     field => field.Name,
                     field => field)
@@ -59,18 +62,19 @@ namespace hutel.Logic
             return new TagDataContract
             {
                 Id = Id,
+                IsSensitive = IsSensitive,
                 Fields = Fields.Values.Select(field => field.ToDataContract()).ToList()
             };
         }
     }
 
-    public class TagValidationException: Exception
+    public class TagValidationException : Exception
     {
         public TagValidationException()
         {
         }
 
-        public TagValidationException(string message): base(message)
+        public TagValidationException(string message) : base(message)
         {
         }
 

@@ -21,6 +21,8 @@ namespace hutel.Storage
         private const string TagsFileName = "tags.json";
         private const string ChartsFileBaseName = "charts";
         private const string ChartsFileName = "charts.json";
+        private const string SettingsFileBaseName = "settings";
+        private const string SettingsFileName = "settings.json";
         private const string FolderMimeType = "application/vnd.google-apps.folder";
         private const string JsonMimeType = "application/octet-stream";
         private readonly string _userId;
@@ -33,6 +35,8 @@ namespace hutel.Storage
         private DateTime? _tagsLastBackupDate;
         private string _chartsFileId;
         private DateTime? _chartsLastBackupDate;
+        private string _settingsFileId;
+        private DateTime? _settingsLastBackupDate;
         private ILogger _logger;
         
         public GoogleDriveHutelStorageClient(string userId, ILoggerFactory loggerFactory)
@@ -101,6 +105,21 @@ namespace hutel.Storage
             await WriteFileAsStringAsync(_chartsFileId, data);
         }
 
+        public async Task<string> ReadSettingsAsStringAsync()
+        {
+            await InitAsync();
+            _logger.LogInformation("ReadSettingsAsStringAsync");
+            return await ReadFileAsStringAsync(_settingsFileId);
+        }
+
+        public async Task WriteSettingsAsStringAsync(string data)
+        {
+            await InitAsync();
+            _logger.LogInformation("WriteSettingsAsStringAsync");
+            await BackupSettingsIfNeededAsync();
+            await WriteFileAsStringAsync(_settingsFileId, data);
+        }
+
         public Task Reload()
         {
             // This implementation is synchronous, nothing to reload
@@ -127,26 +146,33 @@ namespace hutel.Storage
             var pointsFileTask = GetOrCreateFileAsync(PointsFileName, null, _rootFolderId);
             var tagsFileTask = GetOrCreateFileAsync(TagsFileName, null, _rootFolderId);
             var chartsFileTask = GetOrCreateFileAsync(ChartsFileName, null, _rootFolderId);
+            var settingsFileTask = GetOrCreateFileAsync(SettingsFileName, null, _rootFolderId);
             var pointsLastBackupTask = FindLastBackupAsync(
                 PointsFileBaseName, PointsFileName, _rootFolderId);
             var tagsLastBackupTask = FindLastBackupAsync(
                 TagsFileBaseName, TagsFileName, _rootFolderId);
             var chartsLastBackupTask = FindLastBackupAsync(
                 ChartsFileBaseName, ChartsFileName, _rootFolderId);
+            var settingsLastBackupTask = FindLastBackupAsync(
+                SettingsFileBaseName, SettingsFileName, _rootFolderId);
 
             var pointsFile = await pointsFileTask;
             var tagsFile = await tagsFileTask;
             var chartsFile = await chartsFileTask;
+            var settingsFile = await settingsFileTask;
             var pointsLastBackup = await pointsLastBackupTask;
             var tagsLastBackup = await tagsLastBackupTask;
             var chartsLastBackup = await chartsLastBackupTask;
+            var settingsLastBackup = await settingsLastBackupTask;
 
             _pointsFileId = pointsFile.Id;
             _tagsFileId = tagsFile.Id;
             _chartsFileId = chartsFile.Id;
+            _settingsFileId = settingsFile.Id;
             _pointsLastBackupDate = pointsLastBackup?.CreatedDate;
             _tagsLastBackupDate = tagsLastBackup?.CreatedDate;
             _chartsLastBackupDate = chartsLastBackup?.CreatedDate;
+            _settingsLastBackupDate = settingsLastBackup?.CreatedDate;
             _initialized = true;
         }
 
@@ -222,6 +248,17 @@ namespace hutel.Storage
                 var backupDateString = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
                 var backupFileName = $"{ChartsFileBaseName}-{backupDateString}.json";
                 await CopyFileAsync(_chartsFileId, backupFileName);
+            }
+        }
+
+        private async Task BackupSettingsIfNeededAsync()
+        {
+            if (!_settingsLastBackupDate.HasValue ||
+                (DateTime.UtcNow - _settingsLastBackupDate.Value).Days >= 1)
+            {
+                var backupDateString = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                var backupFileName = $"{SettingsFileBaseName}-{backupDateString}.json";
+                await CopyFileAsync(_settingsFileId, backupFileName);
             }
         }
 

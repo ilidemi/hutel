@@ -8,15 +8,18 @@ namespace hutel.Storage
     public class GoogleDriveWritebackHutelStorageClient : IHutelStorageClient, IDisposable
     {
         private static readonly TimeSpan FlushPeriod = TimeSpan.FromSeconds(10);
+        private string _settingsCache;
         private string _chartsCache;
         private string _pointsCache;
         private string _tagsCache;
         private bool _chartsChanged = false;
         private bool _pointsChanged = false;
         private bool _tagsChanged = false;
+        private bool _settingsChanged = false;
         private SemaphoreSlim _chartsCacheLock = new SemaphoreSlim(1);
         private SemaphoreSlim _pointsCacheLock = new SemaphoreSlim(1);
         private SemaphoreSlim _tagsCacheLock = new SemaphoreSlim(1);
+        private SemaphoreSlim _settingsCacheLock = new SemaphoreSlim(1);
         private GoogleDriveHutelStorageClient _googleDriveClient;
         private ILogger<GoogleDriveWritebackHutelStorageClient> _logger;
 
@@ -37,6 +40,7 @@ namespace hutel.Storage
         {
             if (disposing)
             {
+                this._settingsCacheLock.Dispose();
                 this._chartsCacheLock.Dispose();
                 this._pointsCacheLock.Dispose();
                 this._tagsCacheLock.Dispose();
@@ -48,6 +52,24 @@ namespace hutel.Storage
         {
             while (true)
             {
+                if (_settingsChanged)
+                {
+                    await _settingsCacheLock.WaitAsync();
+                    var settings = _settingsCache;
+                    _settingsChanged = false;
+                    _settingsCacheLock.Release();
+                    
+                    try
+                    {
+                        await _googleDriveClient.WriteSettingsAsStringAsync(settings);
+                        _logger.LogInformation("Settings writeback OK");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Settings write failed");
+                    }
+                }
+
                 if (_chartsChanged)
                 {
                     await _chartsCacheLock.WaitAsync();
@@ -104,6 +126,27 @@ namespace hutel.Storage
 
                 await Task.Delay(FlushPeriod);
             }
+        }
+
+        public async Task<string> ReadSettingsAsStringAsync()
+        {
+            if (_settingsCache == null)
+            {
+                await _settingsCacheLock.WaitAsync();
+                try
+                {
+                    if (_settingsCache == null)
+                    {
+                        _settingsCache = await _googleDriveClient.ReadSettingsAsStringAsync();
+                    }
+                }
+                finally
+                {
+                    _settingsCacheLock.Release();
+                }
+            }
+
+            return _settingsCache;
         }
 
         public async Task<string> ReadChartsAsStringAsync()
@@ -169,6 +212,14 @@ namespace hutel.Storage
             return _tagsCache;
         }
 
+        public async Task WriteSettingsAsStringAsync(string data)
+        {
+            await _settingsCacheLock.WaitAsync();
+            _settingsCache = data;
+            _settingsChanged = true;
+            _settingsCacheLock.Release();
+        }
+
         public async Task WriteChartsAsStringAsync(string data)
         {
             await _chartsCacheLock.WaitAsync();
@@ -195,6 +246,17 @@ namespace hutel.Storage
 
         public async Task Reload()
         {
+            await _settingsCacheLock.WaitAsync();
+            try
+            {
+                _settingsCache = await _googleDriveClient.ReadSettingsAsStringAsync();
+                _settingsChanged = false;
+            }
+            finally
+            {
+                _settingsCacheLock.Release();
+            }
+
             await _chartsCacheLock.WaitAsync();
             try
             {

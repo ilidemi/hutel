@@ -21,7 +21,7 @@ class SelectTag extends React.Component {
       isExpanded: true
     });
   }
-  
+
   collapse() {
     this.setState({
       isExpanded: false
@@ -94,14 +94,23 @@ class SelectTag extends React.Component {
         }
       />;
     var buttons = this.state.isExpanded
-      ? this.props.tags.map(toButton).concat(
+      ? this.props.tags
+        .filter(tag => !this.props.sensitiveHidden || !tag.isSensitive)
+        .map(toButton)
+        .concat(
           this.props.tags.length >= 10
             ? [collapseButton]
-            : [])
-      : this.props.tags.slice(0, 10).map(toButton).concat(
+            : []
+        )
+      : this.props.tags
+        .slice(0, 10)
+        .filter(tag => !this.props.sensitiveHidden || !tag.isSensitive)
+        .map(toButton)
+        .concat(
           this.props.tags.length >= 10
             ? [expandButton]
-            : []);
+            : []
+        );
     return (
       <div style={style}>
         {buttons}
@@ -112,6 +121,7 @@ class SelectTag extends React.Component {
 
 SelectTag.propTypes = {
   tags: PropTypes.array.isRequired,
+  sensitiveHidden: PropTypes.bool,
   history: PropTypes.object,
   theme: PropTypes.object
 };
