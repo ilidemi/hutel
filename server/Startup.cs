@@ -13,9 +13,6 @@ namespace hutel
 {
     public class Startup
     {
-        private const string _envUseBasicAuth = "HUTEL_USE_BASIC_AUTH";
-        private const string _envUseGoogleAuth = "HUTEL_USE_GOOGLE_AUTH";
-
         private IWebHostEnvironment _environment;
 
         public Startup(IWebHostEnvironment env)
@@ -53,11 +50,15 @@ namespace hutel
             }
             app.UseRedirectToHttpsMiddleware();
             app.UseStaticFiles();
-            if (Environment.GetEnvironmentVariable(_envUseBasicAuth) == "1")
+            if (Environment.GetEnvironmentVariable("HUTEL_USE_BASIC_AUTH") == "1")
             {
                 app.UseBasicAuthMiddleware();
             }
-            if (Environment.GetEnvironmentVariable(_envUseGoogleAuth) == "1")
+            if (Environment.GetEnvironmentVariable("HUTEL_USE_SINGLE_USER_AUTH") == "1")
+            {
+                app.UseSingleUserAuthMiddleware();
+            }
+            if (Environment.GetEnvironmentVariable("HUTEL_USE_GOOGLE_AUTH") == "1")
             {
                 app.UseGoogleAuthMiddleware();
             }

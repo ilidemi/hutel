@@ -39,6 +39,12 @@ namespace hutel.Middleware
     
         public async Task Invoke(HttpContext httpContext)
         {
+            if (httpContext.Items["UserId"] != null)
+            {
+                await _next.Invoke(httpContext);
+                return;
+            }
+
             var requestProtocol = httpContext.Items["protocol"];
             var redirectUri = $"{requestProtocol}://{httpContext.Request.Host}/login";
             var authEndpoint = _authEndpointBase +
