@@ -48,7 +48,6 @@ namespace hutel
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseRedirectToHttpsMiddleware();
             app.UseStaticFiles();
             if (Environment.GetEnvironmentVariable("HUTEL_USE_BASIC_AUTH") == "1")
             {

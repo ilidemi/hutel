@@ -45,8 +45,7 @@ namespace hutel.Middleware
                 return;
             }
 
-            var requestProtocol = httpContext.Items["protocol"];
-            var redirectUri = $"{requestProtocol}://{httpContext.Request.Host}/login";
+            var redirectUri = $"https://{httpContext.Request.Host}/login";
             var authEndpoint = _authEndpointBase +
                 $"?client_id={_clientId}" +
                 $"&redirect_uri={redirectUri}" +
