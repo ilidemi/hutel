@@ -20,6 +20,7 @@ import FloatInput from './FieldInput/FloatInput';
 import StringInput from './FieldInput/StringInput';
 import DateInput from './FieldInput/DateInput';
 import TimeInput from './FieldInput/TimeInput';
+import ClockInput from './FieldInput/ClockInput';
 import EnumInput from './FieldInput/EnumInput';
 import Calendar from './Calendar';
 import PointsHistory from './PointsHistory';
@@ -34,6 +35,7 @@ class SubmitPoint extends React.Component {
       "string": StringInput,
       "date": DateInput,
       "time": TimeInput,
+      "clock": ClockInput,
       "enum": EnumInput
     };
 

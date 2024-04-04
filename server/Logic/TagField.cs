@@ -12,6 +12,7 @@ namespace hutel.Logic
         public const string StringType = "string";
         public const string DateType = "date";
         public const string TimeType = "time";
+        public const string ClockType = "clock";
         public const string EnumType = "enum";
     }
 
@@ -69,6 +70,7 @@ namespace hutel.Logic
                 { "string", typeof(StringTagField) },
                 { "date", typeof(DateTagField) },
                 { "time", typeof(TimeTagField) },
+                { "clock", typeof(ClockTagField) },
                 { "enum", typeof(EnumTagField) }
             };
     }
@@ -184,6 +186,32 @@ namespace hutel.Logic
         {
             TypeValidationHelper.Validate(obj, typeof(HutelTime));
             return ((HutelTime)obj).ToString();
+        }
+    }
+    
+    public class ClockTagField : BaseTagField
+    {
+        public override string TypeString { get { return TagFieldConstants.ClockType; } }
+
+        public ClockTagField(TagFieldDataContract fieldDataContract) : base(fieldDataContract) {}
+        
+        public override Object ValueFromDataContract(Object obj)
+        {
+            TypeValidationHelper.Validate(obj, typeof(string));
+            try
+            {
+                return new HutelClock((string)obj);
+            }
+            catch(Exception ex)
+            {
+                throw new TypeValidationException("Error in clock constructor", ex);
+            }
+        }
+
+        public override Object ValueToDataContract(Object obj)
+        {
+            TypeValidationHelper.Validate(obj, typeof(HutelClock));
+            return ((HutelClock)obj).ToString();
         }
     }
 

@@ -1,2 +1,3 @@
 export const dateFormat = "YYYY-MM-DD";
-export const timeFormat = "HH:mm:ss";
+export const timeFormat = "H:mm:ss";
+export const clockFormat = "H:mm";

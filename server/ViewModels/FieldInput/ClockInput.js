@@ -6,21 +6,21 @@ import TextField from 'material-ui/TextField';
 
 import * as Constants from '../Constants';
 
-class TimeInput extends React.Component {
+class ClockInput extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       value : this.props.field.defaultValue
-        ? moment(this.props.field.defaultValue, Constants.timeFormat)
+        ? moment(this.props.field.defaultValue, Constants.clockFormat)
         : null
     };
   }
   
   onBlur(e) {
     var value = e.target.value;
-    var current = moment(value, Constants.timeFormat);
+    var current = moment(value, Constants.clockFormat);
     var success = current.isValid();
-    var validationMessage = success ? "" : "The format is " + Constants.timeFormat;
+    var validationMessage = success ? "" : "The format is " + Constants.clockFormat;
     this.setState({
       value: value,
       validationMessage: validationMessage
@@ -42,7 +42,7 @@ class TimeInput extends React.Component {
       <div>
         <TextField
           name={this.props.field.name}
-          floatingLabelText={this.props.field.name + " (h:mm:ss)"}
+          floatingLabelText={this.props.field.name + " (h:mm)"}
           floatingLabelFixed={true}
           value={this.state.value}
           errorText={this.state.validationMessage}
@@ -54,10 +54,10 @@ class TimeInput extends React.Component {
   }
 }
 
-TimeInput.propTypes = {
+ClockInput.propTypes = {
   field: PropTypes.object,
   onSuccessfulParse: PropTypes.func,
   theme: PropTypes.object
 };
 
-export default TimeInput;
+export default ClockInput;

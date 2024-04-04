@@ -51,5 +51,19 @@
                 "type": "time"
             }
         ]
+    },
+    {
+        "id": "sleep",
+        "isSensitive": true,
+        "fields": [
+            {
+                "name": "fall",
+                "type": "clock"
+            },
+            {
+                "name": "wakeup",
+                "type": "clock"
+            }
+        ]
     }
 ]

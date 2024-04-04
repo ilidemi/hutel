@@ -3,20 +3,20 @@ using System.Globalization;
 
 namespace hutel.Logic
 {
-    public class HutelTime
+    public class HutelClock
     {
         public TimeSpan TimeSpan { get; }
 
-        private const string _format = @"H\:mm\:ss";
+        private const string _format = @"H\:mm";
 
-        public HutelTime(string time)
+        public HutelClock(string clock)
         {
-            TimeSpan = TimeSpan.ParseExact(time, _format, CultureInfo.InvariantCulture);
+            TimeSpan = TimeSpan.ParseExact(clock, _format, CultureInfo.InvariantCulture);
         }
 
         override public bool Equals(Object obj)
         {
-            return obj is HutelTime && TimeSpan == ((HutelTime)obj).TimeSpan;
+            return obj is HutelClock && TimeSpan == ((HutelClock)obj).TimeSpan;
         }
 
         override public int GetHashCode()
@@ -29,32 +29,32 @@ namespace hutel.Logic
             return TimeSpan.ToString(_format, CultureInfo.InvariantCulture);
         }
 
-        public static bool operator>(HutelTime a, HutelTime b)
+        public static bool operator>(HutelClock a, HutelClock b)
         {
             return a.TimeSpan > b.TimeSpan;
         }
 
-        public static bool operator<(HutelTime a, HutelTime b)
+        public static bool operator<(HutelClock a, HutelClock b)
         {
             return a.TimeSpan < b.TimeSpan;
         }
 
-        public static bool operator==(HutelTime a, HutelTime b)
+        public static bool operator==(HutelClock a, HutelClock b)
         {
             return a.TimeSpan == b.TimeSpan;
         }
 
-        public static bool operator!=(HutelTime a, HutelTime b)
+        public static bool operator!=(HutelClock a, HutelClock b)
         {
             return a.TimeSpan != b.TimeSpan;
         }
 
-        public static bool operator>=(HutelTime a, HutelTime b)
+        public static bool operator>=(HutelClock a, HutelClock b)
         {
             return a.TimeSpan >= b.TimeSpan;
         }
 
-        public static bool operator<=(HutelTime a, HutelTime b)
+        public static bool operator<=(HutelClock a, HutelClock b)
         {
             return a.TimeSpan <= b.TimeSpan;
         }
