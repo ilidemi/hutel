@@ -7,7 +7,7 @@ namespace hutel.Logic
     {
         public TimeSpan TimeSpan { get; }
 
-        private const string _format = @"H\:mm\:ss";
+        private const string _format = @"h\:mm\:ss";
 
         public HutelTime(string time)
         {
