@@ -1,6 +1,10 @@
 # Hutel
 
-To run the project, grab the latest [.NET Core](https://www.microsoft.com/net/core) and run
+**Hutel** is a personal habit tracker, made with React.
+
+![Screenshot](screenshot.png)
+
+To run the project, grab the latest [.NET](https://dotnet.microsoft.com/en-us/download) and run
 
 ```Shell
 dotnet restore
