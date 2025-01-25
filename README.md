@@ -1,4 +1,4 @@
-# Human Telemetry
+# Hutel
 
 To run the project, grab the latest [.NET Core](https://www.microsoft.com/net/core) and run
 
