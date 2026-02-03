@@ -2,7 +2,7 @@
 
 **Hutel** is a personal habit tracker, made with React.
 
-![Screenshot](screenshot.png | width=350)
+<img src="screenshot.png" alt="Screenshot" width="350">
 
 To run the project, grab the latest [.NET](https://dotnet.microsoft.com/en-us/download) and run
 
