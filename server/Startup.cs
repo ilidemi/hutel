@@ -1,6 +1,7 @@
 using System;
 using hutel.Filters;
 using hutel.Middleware;
+using LettuceEncrypt;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
