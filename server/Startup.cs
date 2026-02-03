@@ -37,7 +37,8 @@ namespace hutel
 
             if (this._environment.IsProduction())
             {
-                services.AddLettuceEncrypt();
+                services.AddLettuceEncrypt()
+                    .PersistDataToDirectory(new System.IO.DirectoryInfo("/app/certificates"), null);
             }
         }
 
