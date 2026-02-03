@@ -1,7 +1,6 @@
 using System;
 using hutel.Filters;
 using hutel.Middleware;
-using LettuceEncrypt;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,11 +35,6 @@ namespace hutel
             services.AddScoped<ValidateModelStateAttribute>();
             services.AddLogging(opt => opt.AddConsole());
 
-            if (this._environment.IsProduction())
-            {
-                services.AddLettuceEncrypt()
-                    .PersistDataToDirectory(new System.IO.DirectoryInfo("/app/certificates"), null);
-            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
